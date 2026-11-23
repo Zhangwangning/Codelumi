@@ -34,7 +34,7 @@ import urllib.parse
 import urllib.request
 
 API = "https://api.appstoreconnect.apple.com"
-BUNDLE_ID = "com.jikezhang.allude"
+BUNDLE_ID = "com.jikezhang.codelumi"
 EXTERNAL_GROUP_NAME = "Codelumi公测"
 LOCALE = "zh-Hans"
 

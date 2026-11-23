@@ -48,11 +48,11 @@ python3 tools/annotation/address-report.py 标注模板_合并.tsv
 
 ## 2.8 并入用户从 App 导出的样本
 
-用户在 App 里「设置 › 帮助与反馈 › 帮助改进Allude」添加的样本，
-导出后是一份 `allude-training.jsonl`。直接并入标注集：
+用户在 App 里「设置 › 帮助与反馈 › 帮助改进Codelumi」添加的样本，
+导出后是一份 `codelumi-training.jsonl`。直接并入标注集：
 
 ```bash
-python3 tools/annotation/import-training.py allude-training.jsonl
+python3 tools/annotation/import-training.py codelumi-training.jsonl
 ```
 
 - 默认并入 `标注模板_定稿.tsv`，已有原文按「删空白后全等」去重；
@@ -66,7 +66,7 @@ swiftc -O -parse-as-library -o /tmp/retrain tools/annotation/retrain.swift
 /tmp/retrain 标注模板.tsv
 ```
 
-输出 `Allude/Allude/Resources/AlludePickup.mlmodel`，
+输出 `Codelumi/Codelumi/Resources/CodelumiPickup.mlmodel`，
 然后重新构建装机即可。脚本会打印「人工改判 N 条」与测试集指标。
 
 ## 红线

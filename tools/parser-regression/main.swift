@@ -2,8 +2,8 @@
 //
 // 用法：
 //   swiftc -O -o /tmp/parser-regression \
-//     "/Volumes/ZWN/Downloads/Project/Allude/Allude/Allude/Models/PickupParser.swift" \
-//     /Volumes/ZWN/Downloads/Project/Allude/tools/parser-regression.swift
+//     "/Volumes/ZWN/Downloads/Project/Codelumi/Codelumi/Codelumi/Models/PickupParser.swift" \
+//     /Volumes/ZWN/Downloads/Project/Codelumi/tools/parser-regression.swift
 //   /tmp/parser-regression "/Volumes/ZWN/Downloads/Project/shortcuts-toolkit-master/快递取件码短信库.md"
 //
 // 说明：PickupParser 只依赖 Foundation，因此可与本文件单独编译，

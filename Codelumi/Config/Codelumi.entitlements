@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>aps-environment</key>
+	<string>development</string>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.jikezhang.codelumi</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudDocuments</string>
+	</array>
+	<!-- 2026-11-12 iCloud 同步：只用到 iCloud 云盘（Documents 容器），不碰 CloudKit -->
+	<key>com.apple.developer.ubiquity-container-identifiers</key>
+	<array>
+		<string>iCloud.com.jikezhang.codelumi</string>
+	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.jikezhang.codelumi</string>
+	</array>
+</dict>
+</plist>

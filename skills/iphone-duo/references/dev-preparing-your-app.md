@@ -123,7 +123,7 @@
 2. **导航容器放在排列视图外面**：`ArrangementView` 只排内容，不处理导航。
 3. **折叠时只做小幅调整**：HIG「避免极端的布局变化，仅移动必要元素」。
 
-### 5. 对 Allude 的落点
+### 5. 对 Codelumi 的落点
 
 - 内屏横屏 = `TabView`（系统栏竖排在 detail 侧）+ 每个 tab 内 `NavigationSplitView`；
   **不要再给 TabView 叠人工 chrome**（`PadTabChrome` / `AdaptiveTabBarStyle` /

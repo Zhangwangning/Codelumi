@@ -10,7 +10,7 @@ import CreateML
 // 读取规则：
 //   · 「人工判定」列有值（pickup / other）就用它，否则用「预填」列；
 //   · 空行、没有原文的行一律跳过；
-//   · 输出模型到 Allude/Allude/Resources/AlludePickup.mlmodel。
+//   · 输出模型到 Codelumi/Codelumi/Resources/CodelumiPickup.mlmodel。
 
 @main
 struct Retrain {
@@ -63,7 +63,7 @@ struct Retrain {
         }
         print("测试集：真快递保留 \(tp)/\(tp+fn)（误杀 \(fn)），非快递挡掉 \(tn)/\(tn+fp)（误放 \(fp)）")
 
-        let out = URL(fileURLWithPath: "Allude/Allude/Resources/AlludePickup.mlmodel")
+        let out = URL(fileURLWithPath: "Codelumi/Codelumi/Resources/CodelumiPickup.mlmodel")
         try classifier.write(to: out)
         print("模型已写入：\(out.path)")
     }

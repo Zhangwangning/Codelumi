@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Allude · 品牌调色板提取器
+Codelumi · 品牌调色板提取器
 ==================================
 
-从各品牌的官方图标里提取主色，生成 `AlludeShared/BrandPalette.swift`，
+从各品牌的官方图标里提取主色，生成 `CodelumiShared/BrandPalette.swift`，
 供详情页做「跟着品牌走的磨砂玻璃卡片」。
 
 为什么提取而不是手填
@@ -59,8 +59,8 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
-SOURCE_DIR = os.path.join(ROOT, "Allude", "AlludeShared", "Assets.xcassets", "Brands")
-OUT = os.path.join(ROOT, "Allude", "AlludeShared", "BrandPalette.swift")
+SOURCE_DIR = os.path.join(ROOT, "Codelumi", "CodelumiShared", "Assets.xcassets", "Brands")
+OUT = os.path.join(ROOT, "Codelumi", "CodelumiShared", "BrandPalette.swift")
 
 TOP_N = 3          # 每张图取几个色
 SAMPLES = 64       # 量化前先缩到多少像素

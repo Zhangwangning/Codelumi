@@ -1,8 +1,8 @@
 ---
 name: unslop-ios
-description: 把「AI 味」的 iOS / SwiftUI 界面改成有设计感的界面。用于界面「看着像 AI 生成」、文案像模板、设置页堆砌重复条目、间距字号随手来、或者要上架前做一遍视觉与文案的收口。按 间距 → 颜色 → 字号 → 图标 → 文案 → 布局 → 动效 的顺序整屏修一遍，并给出每个页面「只属于Allude」的那一个细节。
+description: 把「AI 味」的 iOS / SwiftUI 界面改成有设计感的界面。用于界面「看着像 AI 生成」、文案像模板、设置页堆砌重复条目、间距字号随手来、或者要上架前做一遍视觉与文案的收口。按 间距 → 颜色 → 字号 → 图标 → 文案 → 布局 → 动效 的顺序整屏修一遍，并给出每个页面「只属于Codelumi」的那一个细节。
 license: CC-BY-4.0
-attribution: 改编自 Damir Sokolovsky（@heydamir）的 unslop（github.com/heydamir/unslop, CC BY 4.0），针对 SwiftUI / iOS 与本项目（Allude）重写。
+attribution: 改编自 Damir Sokolovsky（@heydamir）的 unslop（github.com/heydamir/unslop, CC BY 4.0），针对 SwiftUI / iOS 与本项目（Codelumi）重写。
 ---
 
 # unslop-ios
@@ -10,7 +10,7 @@ attribution: 改编自 Damir Sokolovsky（@heydamir）的 unslop（github.com/he
 AI 生成的界面会以可预测的方式失败：每块都发光、每个标签都带 emoji、间距是模型当天随手打的、文案在喊。
 unslop 修的是**手艺**，不是产品：功能、内容、区块顺序都保留，变的是每一个尺寸、颜色、词和图像都变成有意的选择。
 
-干净但「哪个 App 都长得一样」只是另一种模板。所以每一轮都要以**只有Allude才会有的一屏**结束。
+干净但「哪个 App 都长得一样」只是另一种模板。所以每一轮都要以**只有Codelumi才会有的一屏**结束。
 
 > 本文件改编自 Damir Sokolovsky（[@heydamir](https://x.com/heydamir)）的 unslop，原版为 CC BY 4.0。
 > 保留此署名即可自由使用与修改。
@@ -35,9 +35,9 @@ unslop 修的是**手艺**，不是产品：功能、内容、区块顺序都保
 4. **定方向（5 行）**，先给用户看再动手：
    - **Product**：一句话说清为谁做什么。
    - **Character**：2–3 个具体词（`克制、精确、略暖`）。禁止「简洁、现代、高级、精致」这类模板词。
-   - **World**：产品天然属于哪儿 —— Allude属于**门牌号、驿站货架、小区门禁**，不是太空、不是赛博。
+   - **World**：产品天然属于哪儿 —— Codelumi属于**门牌号、驿站货架、小区门禁**，不是太空、不是赛博。
    - **Moments**：1–2 处可以「浓一点」的地方（取件码大字、品牌色图标网格）。
-   - **Signature**：一个只有Allude会有的细节（如取件码的等宽字 + 品牌色胶囊底），全 App 统一。
+   - **Signature**：一个只有Codelumi会有的细节（如取件码的等宽字 + 品牌色胶囊底），全 App 统一。
 5. **按顺序修 7 遍**，一遍整屏过完再进下一遍。间距第一，因为节奏对了其它都跟着变。
 6. **复查**：重新截图，对照审计清单，剩下的继续修（一屏最多渲染 3 次）。
 7. **报告**：方向、每遍改了什么、还剩什么。

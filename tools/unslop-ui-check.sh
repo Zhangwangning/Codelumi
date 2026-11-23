@@ -6,7 +6,7 @@
 # 查的是**能机器判定的**几条，其余（层次、节奏、文案口气）靠人看截图。
 set -uo pipefail
 cd "$(dirname "$0")/.."
-VIEWS=Allude/Allude/Views
+VIEWS=Codelumi/Codelumi/Views
 FILES=$(find "$VIEWS" -name '*.swift')
 FAIL=0
 say() { printf '%s\n' "$1"; }
@@ -17,9 +17,9 @@ HITS=$(grep -rnP '"[^"]*[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}][^"]*"' $FILES 2>/
 [ -n "$HITS" ] && { printf '%s\n' "$HITS"; bad "界面文案含 emoji，换 SF Symbols 或删掉"; } || say "  ✓ 无"
 
 say "== 2. 设置/教程页里写死字号（应走 TypeScale）=="
-HITS=$(grep -rn "\.system(size: 1[0-9]" Allude/Allude/Views/ProfileView.swift \
-        Allude/Allude/Views/SettingsHelpAbout.swift \
-        Allude/Allude/Views/TrainingDataView.swift 2>/dev/null | head -10 || true)
+HITS=$(grep -rn "\.system(size: 1[0-9]" Codelumi/Codelumi/Views/ProfileView.swift \
+        Codelumi/Codelumi/Views/SettingsHelpAbout.swift \
+        Codelumi/Codelumi/Views/TrainingDataView.swift 2>/dev/null | head -10 || true)
 [ -n "$HITS" ] && { printf '%s\n' "$HITS"; bad "设置类页面出现数值字号，改用 AppTheme.TypeScale"; } || say "  ✓ 无"
 
 say "== 3. Text 里残留 Markdown 星号 =="

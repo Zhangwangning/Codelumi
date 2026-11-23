@@ -44,7 +44,7 @@ xcrun simctl io <UDID> screenshot --display=3 /tmp/duo-inner.png   # 内屏，�
 
 # 启动到某个脚手架页面（本项目约定）
 SIMCTL_CHILD_SCREEN=pending SIMCTL_CHILD_SKIP_PERM=1 SIMCTL_CHILD_SKIP_ONBOARDING=1 \
-  xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.allude
+  xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.codelumi
 ```
 
 - ❌ `simctl` **没有** fold / unfold / rotate；`io ... screenConfig --display=3 geometry 2853x2007`

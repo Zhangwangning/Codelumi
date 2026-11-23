@@ -2,16 +2,16 @@
 //
 // 用法（2026-11-20 更新：依赖链已随共享层增长，编译列表变长）：
 //   swiftc -O -o /tmp/dedupe-check \
-//     "$PWD/Allude/AlludeShared/PickupModels.swift" \
-//     "$PWD/Allude/AlludeShared/CourierBrand.swift" \
-//     "$PWD/Allude/AlludeShared/BrandPalette.swift" \
-//     "$PWD/Allude/AlludeShared/PickupStorage.swift" \
-//     "$PWD/Allude/AlludeShared/StationGroups.swift" \
-//     "$PWD/Allude/AlludeShared/Localization.swift" \
-//     "$PWD/Allude/AlludeShared/AppTheme.swift" \
-//     "$PWD/Allude/AlludeShared/FontScale.swift" \
-//     "$PWD/Allude/AlludeShared/OfflineLicense.swift" \
-//     "$PWD/Allude/AlludeShared/LicenseDevice.swift" \
+//     "$PWD/Codelumi/CodelumiShared/PickupModels.swift" \
+//     "$PWD/Codelumi/CodelumiShared/CourierBrand.swift" \
+//     "$PWD/Codelumi/CodelumiShared/BrandPalette.swift" \
+//     "$PWD/Codelumi/CodelumiShared/PickupStorage.swift" \
+//     "$PWD/Codelumi/CodelumiShared/StationGroups.swift" \
+//     "$PWD/Codelumi/CodelumiShared/Localization.swift" \
+//     "$PWD/Codelumi/CodelumiShared/AppTheme.swift" \
+//     "$PWD/Codelumi/CodelumiShared/FontScale.swift" \
+//     "$PWD/Codelumi/CodelumiShared/OfflineLicense.swift" \
+//     "$PWD/Codelumi/CodelumiShared/LicenseDevice.swift" \
 //     "$PWD/tools/swift-cli-shim.swift" \
 //     "$PWD/tools/dedupe-check/main.swift"
 //   /tmp/dedupe-check
@@ -29,7 +29,7 @@
 import Foundation
 import SwiftUI
 
-// `Color(hex:)` 由 `AlludeShared/AppTheme.swift` 提供（本工具连带编译 AppTheme，
+// `Color(hex:)` 由 `CodelumiShared/AppTheme.swift` 提供（本工具连带编译 AppTheme，
 // 早先那份本地补丁会和它撞成「ambiguous use of init(hex:)」）。
 // 颜色不参与合并策略的任何断言。
 

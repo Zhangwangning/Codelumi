@@ -4,7 +4,7 @@ import Foundation
 // 人工只需改错的行。列顺序可在 Numbers / Excel 里直接看。
 //
 // 用法：
-//   swiftc -O -o /tmp/gen-template Allude/Allude/Models/PickupParser.swift \
+//   swiftc -O -o /tmp/gen-template Codelumi/Codelumi/Models/PickupParser.swift \
 //     /tmp/stub.swift tools/annotation/gen-template.swift
 //   /tmp/gen-template 短信语料库_v1.md > 标注模板.tsv
 

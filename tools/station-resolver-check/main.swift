@@ -2,16 +2,16 @@
 //
 // 用法（2026-11-21 新建，随「组是地点 / 手工指定 / 组名不参与识别」的定案而来）：
 //   swiftc -O -o /tmp/station-resolver-check \
-//     "$PWD/Allude/AlludeShared/PickupModels.swift" \
-//     "$PWD/Allude/AlludeShared/CourierBrand.swift" \
-//     "$PWD/Allude/AlludeShared/BrandPalette.swift" \
-//     "$PWD/Allude/AlludeShared/PickupStorage.swift" \
-//     "$PWD/Allude/AlludeShared/StationGroups.swift" \
-//     "$PWD/Allude/AlludeShared/Localization.swift" \
-//     "$PWD/Allude/AlludeShared/AppTheme.swift" \
-//     "$PWD/Allude/AlludeShared/FontScale.swift" \
-//     "$PWD/Allude/AlludeShared/OfflineLicense.swift" \
-//     "$PWD/Allude/AlludeShared/LicenseDevice.swift" \
+//     "$PWD/Codelumi/CodelumiShared/PickupModels.swift" \
+//     "$PWD/Codelumi/CodelumiShared/CourierBrand.swift" \
+//     "$PWD/Codelumi/CodelumiShared/BrandPalette.swift" \
+//     "$PWD/Codelumi/CodelumiShared/PickupStorage.swift" \
+//     "$PWD/Codelumi/CodelumiShared/StationGroups.swift" \
+//     "$PWD/Codelumi/CodelumiShared/Localization.swift" \
+//     "$PWD/Codelumi/CodelumiShared/AppTheme.swift" \
+//     "$PWD/Codelumi/CodelumiShared/FontScale.swift" \
+//     "$PWD/Codelumi/CodelumiShared/OfflineLicense.swift" \
+//     "$PWD/Codelumi/CodelumiShared/LicenseDevice.swift" \
 //     "$PWD/tools/swift-cli-shim.swift" \
 //     "$PWD/tools/station-resolver-check/main.swift" && /tmp/station-resolver-check
 //

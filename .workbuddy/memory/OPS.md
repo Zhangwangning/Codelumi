@@ -1,35 +1,35 @@
-# Allude 操作手册（发版 / 真机 / 取证 / 内购）
+# Codelumi 操作手册（发版 / 真机 / 取证 / 内购）
 
 ## 真机安装（Debug，唯一能验灵动岛的路）
 ```
 DEST='platform=iOS,id=00008140-001138A92E01801C'   # iPhone 16 Pro（桌面名被改成「Huawei Mate XT」）
-xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
-  -derivedDataPath /tmp/allude-device -allowProvisioningUpdates \
+xcodebuild -project Codelumi.xcodeproj -scheme Codelumi -destination "$DEST" \
+  -derivedDataPath /tmp/codelumi-device -allowProvisioningUpdates \
   -allowProvisioningDeviceRegistration OTHER_SWIFT_FLAGS="-disable-sandbox" build
 ```
 - 团队 `8499X3S9X8` automatic signing。模拟器 `CODE_SIGNING_ALLOWED=NO` 的包**没有 App Group**。
 - 移开模型构建出的包**缺 `.mlmodelc` 且残留 `.bak`**：
   `xcrun coremlc compile <in> <outdir>`（**位置参数**，没有 `--output-dir`）→ `rm` 掉 `.bak`
-  → `cp -R` 进 `Allude.app/` → **必须重签**，先 appex 后 App：
+  → `cp -R` 进 `Codelumi.app/` → **必须重签**，先 appex 后 App：
   ```
-  codesign -d --entitlements :- Allude.app 2>&1 | sed -n '/<?xml/,$p' > /tmp/ent.plist
+  codesign -d --entitlements :- Codelumi.app 2>&1 | sed -n '/<?xml/,$p' > /tmp/ent.plist
   ID="2728A60C4902F4F2EF87F8A9B02564C87172B59E"   # Apple Development: zhang_wangning@126.com (K2FQFHU46Z)
-  codesign -f -s "$ID" --entitlements /tmp/ent_widget.plist --timestamp=none Allude.app/PlugIns/AlludeWidget.appex
-  codesign -f -s "$ID" --entitlements /tmp/ent_app.plist    --timestamp=none Allude.app
+  codesign -f -s "$ID" --entitlements /tmp/ent_widget.plist --timestamp=none Codelumi.app/PlugIns/CodelumiWidget.appex
+  codesign -f -s "$ID" --entitlements /tmp/ent_app.plist    --timestamp=none Codelumi.app
   ```
   **必须用导出的** entitlements：裸 `Config/*.entitlements` 缺 `application-identifier` /
   `team-identifier` / `get-task-allow`，装了起不来。
 - `devicectl device install app --device <id> <path>`；
   `devicectl device process launch --terminate-existing -e '{"SCREEN":"…"}'`；
-  `--console` 可抓 stdout（`[allude-iap]` 等日志）；`process terminate --pid <pid>`（**只吃 pid**）；
+  `--console` 可抓 stdout（`[codelumi-iap]` 等日志）；`process terminate --pid <pid>`（**只吃 pid**）；
   `devicectl device capture screenshot --device <id> --destination p.png`。
 - 真机读写：`devicectl device info files|copy from|copy to --domain-type appGroupDataContainer
-  --domain-identifier group.com.jikezhang.allude`。真机启动会从 iCloud 同步，种子数据可能被覆盖。
+  --domain-identifier group.com.jikezhang.codelumi`。真机启动会从 iCloud 同步，种子数据可能被覆盖。
 - ⚠️ 装 Debug 包会**覆盖 TestFlight 正式版**（同 bundle id），要回正式版得从 TestFlight 重装。
 
 ## 模拟器取证
 - 无 idb/applesimutils，AppleScript 被拒（-10004）→ 面板靠
-  `SIMCTL_CHILD_SCREEN=xxx xcrun simctl launch <dev> com.jikezhang.allude`
+  `SIMCTL_CHILD_SCREEN=xxx xcrun simctl launch <dev> com.jikezhang.codelumi`
   （**前缀形式**；写在 bundle id 后面会被当 argv 丢弃）。
 - `simctl launch` 必须 `--terminate-running-process`；装完先核对 `CFBundleVersion` 再截图。
 - 常用直达入口（`BuildFlags.scaffoldsEnabled`，仅 Debug）：`history|stats|browse`、`settings|profile`、
@@ -45,9 +45,9 @@ xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
 - 商品：`…pro.lifetime`（非消耗，基准地 CHN，手动价 1 档）+ `…pro.annual`（订阅组 `22565648`）。
   `displayedPlans = [.lifetime, .yearly]`，月度已下架。
 - 🔴 **真机价格不显示 = 商品在 ASC 未过审，不是代码问题**。真机实测日志
-  `[allude-iap] storefront=CHN products=(empty)` —— StoreKit 连上了，但一个商品都不返回。
+  `[codelumi-iap] storefront=CHN products=(empty)` —— StoreKit 连上了，但一个商品都不返回。
   ASC 状态：lifetime `READY_TO_SUBMIT`、annual `CREATED`（都没进过审核）。
-- 模拟器里显示 `$0.99` 是**占位价**，不能当「商品可用」的证据（本地 `Allude.storekit` 写的是
+- 模拟器里显示 `$0.99` 是**占位价**，不能当「商品可用」的证据（本地 `Codelumi.storekit` 写的是
   9.99 / 1.99，ASC 是 CNY，都对不上 0.99）。
 - 修复路径：把两个内购挂进提交单随版本一起送审 → 过审后 StoreKit 才返回商品。
   1.0.0 现为 REJECTED（2.1），得先在 Resolution Center 回复。
@@ -77,7 +77,7 @@ xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
   `aps-environment=production`、`beta-reports-active=true`。
 - 链路：`mv .mlmodel .bak` → `xcodebuild archive -destination 'generic/platform=iOS'
   -allowProvisioningUpdates` → 删包内 `.bak` + 补 `.mlmodelc` → 下载 profile 重签（先 appex 后 App）
-  → `cd /tmp && ditto -c -k --norsrc --keepParent Payload /tmp/Allude.ipa`
+  → `cd /tmp && ditto -c -k --norsrc --keepParent Payload /tmp/Codelumi.ipa`
   （🔴 传 **Payload 目录**；**不能加 `--sequesterRsrc`**）
   → `xcrun altool --validate-app` / `--upload-app`（apiKey `34Z43R5SGY`，
   issuer `e2936bfc-e52b-4931-a763-9f03dec868e3`；`WILL RETRY` 是常态）
@@ -103,9 +103,9 @@ xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
   `getAllCurrentDescriptorsWithCompletion:`，把返回的 descriptor `mutableCopy` 后调
   `setBackgroundRemovable:YES` / `setTransparent:YES` / `setPreferredBackgroundStyle:`
   （0x1 透明、0x2 模糊），重新编码后交回宿主。
-- 本工程实现：`AlludeWidget/WidgetTransparency.mm`（**必须 -fno-objc-arc**，pbxproj 里挂了
+- 本工程实现：`CodelumiWidget/WidgetTransparency.mm`（**必须 -fno-objc-arc**，pbxproj 里挂了
   `COMPILER_FLAGS`；同时登记 fileRef/buildFile/group/widget Sources 四处）。
-  只在 `allude.widget.clear` 打开时才改，其余原样放过；方法找不到/参数个数不对就完全不挂。
+  只在 `codelumi.widget.clear` 打开时才改，其余原样放过；方法找不到/参数个数不对就完全不挂。
 - 风险：私有接口，系统改名字就静默失效（已做判空保护）；全运行时字符串派发，二进制里没有
   私有符号，所以静态扫描看不出来 —— 这也是那些 App 能上架的原因。仍属审核灰区。
 - 参考：`https://github.com/pookjw/ClearAndBlurredWidgets`、方君宇那篇中文复盘
@@ -117,19 +117,19 @@ xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
   这是 2026-11-22 那轮（18 款小组件 / 取件进度 / 背景两开关 / 外部入库通知）的发版构建，
   文案 `tools/testflight-notes/333.md`，App 内版本历史已同步（1.0.0 卡片 + `330–333` 内测记录）。
 - 🔴 entitlements 的 `keychain-access-groups` 必须写**团队前缀的具体 bundle id**
-  （`8499X3S9X8.com.jikezhang.allude`），写裸 `com.jikezhang.allude` → altool 90164
+  （`8499X3S9X8.com.jikezhang.codelumi`），写裸 `com.jikezhang.codelumi` → altool 90164
   「contains a key value that is not allowed」（profile 里是 `8499X3S9X8.*`）。
 - 332 / 331 / 330 / 329 … 全部保留可用（未停测）。
 
 ## ASC 历史（2026-11-21 21:52）
-- 构建 **329** 已上传 VALID（21:52，`019d0ed6`），挂「Allude公测」（组
+- 构建 **329** 已上传 VALID（21:52，`019d0ed6`），挂「Codelumi公测」（组
   `c90099fc-1862-4b2a-8f48-a7537111fe45`），测试内容 693 字，Beta 审核 submitted。
   328（`b49a57ce`）/ 327 / 326 / 325 保留可用。
 - 文案改名（2026-11-21 19:08 走 API 改完并回读确认）：1.0.0 版本描述 4 处
-  `Allude` → `Codelumi`（**没动** `allude-legal` 两个 URL）；内购 lifetime 本地化
-  「Allude Pro 永久 / 订阅可永久使用Allude Pro」→「Codelumi Pro 永久 / 一次买断，永久使用 Codelumi Pro」。
+  `Codelumi` → `Codelumi`（**没动** `codelumi-legal` 两个 URL）；内购 lifetime 本地化
+  「Codelumi Pro 永久 / 订阅可永久使用Codelumi Pro」→「Codelumi Pro 永久 / 一次买断，永久使用 Codelumi Pro」。
   App 级名称已是 `Codelumi`，`CFBundleDisplayName` 已是 `Codelumi`，法务 HTML 全是 Codelumi；
-  版本历史 0.2.7 那条「英文名 Allude」是**史实保留**，别改。
+  版本历史 0.2.7 那条「英文名 Codelumi」是**史实保留**，别改。
 - 1.0.0 目前 `PREPARE_FOR_SUBMISSION`（不是之前记的 REJECTED），已绑 build 327。
   老大 2026-11-21 19:10 决定：**先不提交审核**。
 - 🔴 **API Key 权限差异（2026-11-21 定论）**：`34Z43R5SGY`（DSH）只有「App 管理」→
@@ -148,9 +148,9 @@ xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
 
 
 ## 图标（15 套）· 完整操作与坑（2026-11-22 迁自 MEMORY.md）
-- 🔴 全部 `AppIconNN.imageset` **只放 `AlludeShared/Assets.xcassets`**（两 target 都编）；
+- 🔴 全部 `AppIconNN.imageset` **只放 `CodelumiShared/Assets.xcassets`**（两 target 都编）；
   放 App catalog → 灵动岛/锁屏静默渲染灰块。
-- 新增一套动四处：imageset（60/120/180 + original）、`Allude/AppIcons/IconNN@2x|@3x.png`、
+- 新增一套动四处：imageset（60/120/180 + original）、`Codelumi/AppIcons/IconNN@2x|@3x.png`、
   Info.plist 的 **`CFBundleIcons › CFBundleAlternateIcons`**（⚠️ 不在顶层）、`AppIconChoice`。
   `sips -z` 只改尺寸不改格式，源是 JPEG 必须加 `-s format png`。
 - 编号连续 01…15，`fallback` = **`.icon06`（黑盒立体）**，Info.plist 注册 **14 条** alternate
@@ -160,13 +160,13 @@ xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
   （DZYTB0001…DZYTB0015），网格下方显示「DZYTB0006 · 黑盒立体」，无障碍标签也带号。
 - 🔴 **岛内图标随 `ContentState.appIconRaw` 传**，扩展别自己读 `AppIconStore.current`
   （App Group 一断就回落 fallback）。换完走 `refreshForAppIconChange()`。
-- `AlludeWidget/Assets.xcassets` 只留 `AccentColor` + `WidgetBackground`。
+- `CodelumiWidget/Assets.xcassets` 只留 `AccentColor` + `WidgetBackground`。
 - 模拟器截不到真实灵动岛，只能真机验。
 - 🔴 **换图标模拟器差异**：iOS **17.4 模拟器完全正常**（实测切第 14 套成功）；iOS **26.1/27.2
   模拟器必失败**（宿主侧 CoreServicesUI 缺 upcall bundle：`Code=5 couldn't load upcall bundle
   principal class` / `Code=35 LSIconAlertManager`，重启/换干净模拟器/重装都无效）；**真机正常**。
   → 验切换用 iOS 17.4 runtime 那台或真机，26/27 模拟器只看网格渲染与选中态。
-- ⚠️ 图标偏好**三处**存储，优先级从高到低：App Group `group.com.jikezhang.allude` 域
+- ⚠️ 图标偏好**三处**存储，优先级从高到低：App Group `group.com.jikezhang.codelumi` 域
   （模拟器里也能用！）→ `<App容器>/Library/Application Support/appicon.txt` → standard 域。
   改模拟器状态必须三处一起改，只改镜像文件会被 App Group 旧值压过去；改完 `shutdown`+`boot`
   让 cfprefsd 重载。`simctl spawn defaults read` 读不到 App Group 域，要直接读 plist 文件。
@@ -174,7 +174,7 @@ xcodebuild -project Allude.xcodeproj -scheme Allude -destination "$DEST" \
 
 
 ## 驿站组 / 驿站 ID / 排序（2026-11-22 迁自 MEMORY.md）
-- `AlludeShared/StationGroups.swift`（App + Widget 双 target）。
+- `CodelumiShared/StationGroups.swift`（App + Widget 双 target）。
 - ID 前缀：内置 `NZYZ`、自定义 `DZYYZ`、组 `FZYD`，各 5 位补零；**首次发号落盘固化**
   （`station-identity.json`），之后只追加，不能按下标实时算。
 - 组数据 `station-groups.json`：`id/name/memberIDs/createdAt/iconInheritMemberID/locationInheritMemberID`；

@@ -11,8 +11,8 @@ import SwiftUI
 // 用法：
 // ```
 // swiftc -O -o /tmp/station-check \
-//   Allude/AlludeShared/CourierBrand.swift \
-//   Allude/AlludeShared/BrandPalette.swift \
+//   Codelumi/CodelumiShared/CourierBrand.swift \
+//   Codelumi/CodelumiShared/BrandPalette.swift \
 //   tools/station-check/main.swift && /tmp/station-check
 // ```
 // 退出码 0 = 全部符合基线；1 = 有差异（会逐条打印）。

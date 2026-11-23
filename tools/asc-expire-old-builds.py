@@ -30,7 +30,7 @@ ap.add_argument("--app-version", default="1.0.0", help="只处理这条版本线
 ap.add_argument("--apply", action="store_true", help="真的执行；不给只演练")
 args = ap.parse_args()
 
-app = tfp.api("GET", "/v1/apps", query={"filter[bundleId]": "com.jikezhang.allude"})
+app = tfp.api("GET", "/v1/apps", query={"filter[bundleId]": "com.jikezhang.codelumi"})
 if "data" not in app or not app["data"]:
     print("找不到 App:", json.dumps(app, ensure_ascii=False)[:300])
     sys.exit(1)

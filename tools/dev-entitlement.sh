@@ -8,7 +8,7 @@
 set -euo pipefail
 
 DEVICE="${DEVICE:-00008140-001138A92E01801C}"
-GROUP="group.com.jikezhang.allude"
+GROUP="group.com.jikezhang.codelumi"
 MODE="${1:-free}"
 DEVICECTL="$(xcrun --find devicectl 2>/dev/null || echo /Applications/Xcode.app/Contents/Developer/usr/bin/devicectl)"
 
@@ -16,7 +16,7 @@ push() {
   "$DEVICECTL" device copy to --device "$DEVICE" \
     --domain-type appGroupDataContainer --domain-identifier "$GROUP" \
     --source "$1" --destination "Library/Application Support/entitlement.json" >/dev/null
-  "$DEVICECTL" device process launch --terminate-existing --device "$DEVICE" com.jikezhang.allude >/dev/null 2>&1 || true
+  "$DEVICECTL" device process launch --terminate-existing --device "$DEVICE" com.jikezhang.codelumi >/dev/null 2>&1 || true
 }
 
 case "$MODE" in
@@ -34,7 +34,7 @@ import json, urllib.request
 print("")
 PY
 )"
-    echo "请提供设备码（设置 › 激活 已移除，可从日志 allude-verify 里取）" >&2
+    echo "请提供设备码（设置 › 激活 已移除，可从日志 codelumi-verify 里取）" >&2
     echo "用法：DEVICE_CODE=<32位HEX> bash tools/dev-entitlement.sh lifetime" >&2
     ;;
   *)

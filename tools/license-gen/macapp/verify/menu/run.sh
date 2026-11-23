@@ -21,7 +21,7 @@ cd "$(dirname "$0")/../.."
 OUT="${CC_MENUCHK_OUT:-$HOME/Library/Caches/cc-menuchk}"
 APP="$OUT/MenuCheck.app"
 RESULT=/tmp/cc-menuchk-result.txt
-BUNDLE_ID="com.jikezhang.allude.issuer.menucheck"
+BUNDLE_ID="com.jikezhang.codelumi.issuer.menucheck"
 BASE="build/发码.app"
 
 # ── 1. 真实产物（缺 zh-Hans.lproj 说明是旧构建，得重建才能验证本地化）──────

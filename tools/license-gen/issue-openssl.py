@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ============================================================================
-# Allude · 离线凭证签发（OpenSSL + 标准库版）
+# Codelumi · 离线凭证签发（OpenSSL + 标准库版）
 #
 # 与 issue.mjs **完全等价**（同一算法、同一私钥、可互相验签），
 # 区别只在依赖：本脚本只用 macOS 自带的 `/usr/bin/openssl` 与
@@ -185,7 +185,7 @@ def verify_data(data: bytes, sig_p1363: bytes) -> bool:
 
 
 # 公钥：从私钥现导（验签用），落在系统临时目录，不污染仓库
-PUBLIC_KEY_PATH = os.path.join(tempfile.gettempdir(), 'allude-license-pub.tmp.pem')
+PUBLIC_KEY_PATH = os.path.join(tempfile.gettempdir(), 'codelumi-license-pub.tmp.pem')
 
 
 def ensure_public_key():

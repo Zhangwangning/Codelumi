@@ -110,7 +110,7 @@ func buildWindow(_ controller: NSViewController, size: NSSize, title: String, li
 print("===== ① 主窗口 · 浅色 · 布局与玻璃 =====")
 let mainLight = MainViewController()
 let winL = buildWindow(mainLight, size: NSSize(width: T.windowWidth, height: T.windowHeight),
-                       title: "Allude · 发码工具", light: true)
+                       title: "Codelumi · 发码工具", light: true)
 let viewL = winL.contentView!
 viewL.layoutSubtreeIfNeeded()
 auditZeroSize(viewL)
@@ -187,7 +187,7 @@ for light in [true, false] {
     let tag = light ? "L" : "D"
     let vc = MainViewController()
     let win = buildWindow(vc, size: NSSize(width: T.windowWidth, height: T.windowHeight),
-                          title: "Allude · 发码工具", light: light)
+                          title: "Codelumi · 发码工具", light: light)
     let v = win.contentView!
     v.layoutSubtreeIfNeeded()
     auditZeroSize(v)
@@ -237,7 +237,7 @@ print("===== ⑤ 台账 · 凭证展开态（点「查看」→ 出全文 → �
 
 let vc5 = MainViewController()
 let win5 = buildWindow(vc5, size: NSSize(width: T.windowWidth, height: T.windowHeight),
-                       title: "Allude · 发码工具", light: true)
+                       title: "Codelumi · 发码工具", light: true)
 let v5 = win5.contentView!
 v5.layoutSubtreeIfNeeded()
 

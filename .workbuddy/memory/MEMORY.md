@@ -1,30 +1,30 @@
-# Allude 长期笔记 · 核心（2026-11-22 v4 精简）
+# Codelumi 长期笔记 · 核心（2026-11-22 v4 精简）
 
 > 发版链路 / 真机安装重签 / 模拟器取证 / 内购实测 → 同目录 **`OPS.md`**。
 > **踩过的坑 / 判断原则 / 协作红线 → `PITFALLS.md`（接手先读它）。**
 
 ## 路径与构建
-- 仓库根 `/Volumes/ZWN/Downloads/Project/Allude/`（GitHub `Zhangwangning/Allude` 私有）；
-  工程根 `Allude/`（内含 `Allude.xcodeproj`、`AlludeShared/`、`AlludeWidget/`），App 源码 `Allude/Allude/`。
-- Bundle `com.jikezhang.allude`、Widget `…AlludeWidget`、App Group `group.com.jikezhang.allude`、
-  iCloud `iCloud.com.jikezhang.allude`。纯 iPhone，部署目标 iOS 17.0，`GENERATE_INFOPLIST_FILE=NO`
+- 仓库根 `/Volumes/ZWN/Downloads/Project/Codelumi/`（GitHub `Zhangwangning/Codelumi` 私有）；
+  工程根 `Codelumi/`（内含 `Codelumi.xcodeproj`、`CodelumiShared/`、`CodelumiWidget/`），App 源码 `Codelumi/Codelumi/`。
+- Bundle `com.jikezhang.codelumi`、Widget `…CodelumiWidget`、App Group `group.com.jikezhang.codelumi`、
+  iCloud `iCloud.com.jikezhang.codelumi`。纯 iPhone，部署目标 iOS 17.0，`GENERATE_INFOPLIST_FILE=NO`
   → 增删 Info.plist 键必须改真实文件（`INFOPLIST_KEY_*` 不生效）。
 - 版本号 4 处 `CURRENT_PROJECT_VERSION`；pbxproj 改版本号必须「先读进变量再写回」，内联读写会截成 0 字节。
-- 🔴 Xcode 16 同步文件夹（`PBXFileSystemSynchronizedRootGroup`）：`Allude/Allude/` 下新增 Swift/PNG **不用改 pbxproj**；
-  但 **`AlludeShared/`、`AlludeWidget/` 不是同步组** —— 新增文件必须手工登记（2 处 `PBXBuildFile`
+- 🔴 Xcode 16 同步文件夹（`PBXFileSystemSynchronizedRootGroup`）：`Codelumi/Codelumi/` 下新增 Swift/PNG **不用改 pbxproj**；
+  但 **`CodelumiShared/`、`CodelumiWidget/` 不是同步组** —— 新增文件必须手工登记（2 处 `PBXBuildFile`
   + 1 处 `PBXFileReference` + group children + 两个 target 的 Sources，共 6 处），漏了就是「cannot find X in scope」。
 ```
-cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
-  -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/allude-verify build \
+cd Codelumi && xcodebuild -project Codelumi.xcodeproj -scheme Codelumi \
+  -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/codelumi-verify build \
   CODE_SIGNING_ALLOWED=NO OTHER_SWIFT_FLAGS="-disable-sandbox"
 ```
 - 缺 `-disable-sandbox` → 宏插件起不来，报假错（`'self' is immutable`、`StateMacro could not be found`）。
 - 🔴 agent 会话内构建必卡 CoreML（`sandbox_apply: Operation not permitted`），`ENABLE_USER_SCRIPT_SANDBOXING=NO` 无效。
-  绕过：**同卷**改名 `mv Allude/Resources/AlludePickup.mlmodel{,_hold.bak}` → 构建 → 还原。
+  绕过：**同卷**改名 `mv Codelumi/Resources/CodelumiPickup.mlmodel{,_hold.bak}` → 构建 → 还原。
   🔴 不能 `mv` 到 `/tmp`（跨卷 EXDEV，静默失败，CoreML 照跑构建照挂 —— 踩过）。
 
 ## 卡面命名与图标（唯一真源 · 2026-11-22 定规）
-- `PickupNaming`（`AlludeShared/PickupModels.swift`）是**全 App 唯一取名规则**：
+- `PickupNaming`（`CodelumiShared/PickupModels.swift`）是**全 App 唯一取名规则**：
   `primary` = 快递公司(courier) → 短信平台(company) → 快递驿站(station)；第二段 = 驿站 → 平台且不重复；
   `secondaryLabel` 归组后为「组名/原名」。`iconSource` **恒等于 `primary`**。
 - 🔴 图标规矩（老大原话）：「图标就是当前显示在最前面的那一个」——
@@ -51,12 +51,12 @@ cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
 - 付费页 `FullVersionView` **必须一屏放得下**（form sheet 上限 890pt）；解锁清单固定 5 行。
 
 ## 桌面小组件（2026-11-22 六次改版定稿 · 18 kind）
-- 每个款式一个 kind，真源 `AlludeShared/WidgetPresets.swift`；现状 **18 kind**：
-  · 清单款 3 条都叫「待取清单」，都声明小+中+大：`AlludeCode`（精简，只露驿站/公司）/
-    `AlludeList`（主中）/ `AlludeBoard`（主大）；
+- 每个款式一个 kind，真源 `CodelumiShared/WidgetPresets.swift`；现状 **18 kind**：
+  · 清单款 3 条都叫「待取清单」，都声明小+中+大：`CodelumiCode`（精简，只露驿站/公司）/
+    `CodelumiList`（主中）/ `CodelumiBoard`（主大）；
   · 5 个版式按尺寸各占一条：Progress / FocusCode / Stations / Oldest × 小·中·大（中 `M`、大 `L`）= 15；
-  · 取件码卡片 `AlludeCodeCard`（小）+ `AlludeCodeCardM`（中）——**大尺寸不做**（画布浪费）；
-  · 超大 `AlludeAll` 1 条。
+  · 取件码卡片 `CodelumiCodeCard`（小）+ `CodelumiCodeCardM`（中）——**大尺寸不做**（画布浪费）；
+  · 超大 `CodelumiAll` 1 条。
   🔴 `@WidgetBundleBuilder` 不支持 ForEach，每款逐个写；`Widget` 协议要求**无参 `init()`**
   （缺了只报「does not conform」并指向 bundle，看不出真凶）。
 - 两轴分离：`WidgetPreset.layout`（`WidgetLayout`：list / todayProgress / focusCode / stationBars /
@@ -99,11 +99,11 @@ cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
   （`WidgetDayStat{month,day,total,pending,key}`，统计**全量记录含已取**，只保留有件的天；
   网格按 `month*100+day` 查表，缺的补空格）。
 - 🔴 显示内容 = 用户开关：`WidgetDisplayField`（address/company/station/complete）+
-  `allude.widget.showAddress / showCompany / showStation / showComplete`。
+  `codelumi.widget.showAddress / showCompany / showStation / showComplete`。
   中大清单款露 4 个、精简款露 2 个；`complete` 是总开关。默认驿站+地址开、公司关、完整关。
   `isCustomizable = layout == .list`；改完 `reloadAllTimelines()`。
   🔴 档位按**当前实际 family**（`WidgetPageSize.isFreeFamily`），不能按 `preset.needsPro`。
-- 背景两层独立开关（正交可叠加）：`allude.widget.clear`（可用时真透明）+ `allude.widget.glass`（Liquid Glass），
+- 背景两层独立开关（正交可叠加）：`codelumi.widget.clear`（可用时真透明）+ `codelumi.widget.glass`（Liquid Glass），
   渲染态 solid / clear / glass / clearGlass，都走 `WidgetSurface`。旧键只读不写，
   `migrateLegacyIfNeeded()` 一次性回填。脚手架 `WIDGET_BG=`。
   🔴 **真透明由系统决定，不在 App 手里**（2026-11-22 晚定论，iOS 27.2 SDK 头文件核实）：
@@ -124,7 +124,7 @@ cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
   🔴 右上角「更多」别自己套玻璃（iOS 26 导航栏已给官方容器，会双圈）。
 - 缩略图 = 真实视图 `scaleEffect`（宽度优先填满，不封 1.0）；`WidgetPresetContent` **不做档位判断**，
   锁只由 `PickupWidgetEntryView` 运行时画。
-- ⚠️ kind 全换过（旧 `AlludePickupWidget` 退休），老用户桌面旧实例需删掉重加。
+- ⚠️ kind 全换过（旧 `CodelumiPickupWidget` 退休），老用户桌面旧实例需删掉重加。
 
 ## 解析与数据
 - `PickupParser` 四套正则 + 优先级链 code→waybill→tail→special；新正则必须注册进 `regexes`
@@ -136,12 +136,12 @@ cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
 - 🔴 升级 App 不重解析存量记录：解析修好只对之后 ingest 生效，旧卡片要删掉重加。
 - 权益快照新字段一律 `decodeIfPresent`；`MembershipPlan` 只增不删（删 case = 老用户掉回免费版）；
   订阅必须写 `expiresAt`。`enforceStorageLimit()` 只在 `ingest()` 触发（免费 50 条 FIFO），启动不删。
-- iCloud 写 `<容器>/Documents/records.json`；BYOK Key 只在 Keychain（service `com.jikezhang.allude.ai`）。
-- 回归：`swiftc -O -o /tmp/parser-reg Allude/Models/PickupParser.swift tools/parser-regression/main.swift`
+- iCloud 写 `<容器>/Documents/records.json`；BYOK Key 只在 Keychain（service `com.jikezhang.codelumi.ai`）。
+- 回归：`swiftc -O -o /tmp/parser-reg Codelumi/Models/PickupParser.swift tools/parser-regression/main.swift`
   → `/tmp/parser-reg 短信语料库_v1.md`（基线 514 条：识别 193、地址 192）。
 
 ## 驿站组 / 排序（细节见 `OPS.md`）
-- `AlludeShared/StationGroups.swift`（双 target）。ID 前缀：内置 `NZYZ`、自定义 `DZYYZ`、组 `FZYD`，
+- `CodelumiShared/StationGroups.swift`（双 target）。ID 前缀：内置 `NZYZ`、自定义 `DZYYZ`、组 `FZYD`，
   首次发号落盘固化（`station-identity.json`），之后只追加。
 - 三段优先级：组驿站 > 未归组驿站 > 组内成员（②③ 前缀相同，靠 `memberIndex()` 分辨）。
 - 组名进主名位：`PickupSortLogic.stationName` → 组名；`secondaryLabel` → 「组名/原名」；
@@ -151,9 +151,9 @@ cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
   不 tieBreak 会 App 与小组件排出两种顺序。切分组方式后 `reloadAllTimelines()`。
 
 ## 图标（15 套 · 细节见 `OPS.md`）
-- 🔴 imageset 只放 `AlludeShared/Assets.xcassets`（放 App catalog → 灵动岛/锁屏灰块）；
-  `AlludeWidget/Assets.xcassets` 只留 `AccentColor` + `WidgetBackground`。
-- 新增一套动四处：imageset 60/120/180 + original、`Allude/AppIcons/IconNN@2x|3x.png`、
+- 🔴 imageset 只放 `CodelumiShared/Assets.xcassets`（放 App catalog → 灵动岛/锁屏灰块）；
+  `CodelumiWidget/Assets.xcassets` 只留 `AccentColor` + `WidgetBackground`。
+- 新增一套动四处：imageset 60/120/180 + original、`Codelumi/AppIcons/IconNN@2x|3x.png`、
   Info.plist `CFBundleIcons › CFBundleAlternateIcons`（不在顶层）、`AppIconChoice`。
 - `fallback` = `.icon06`；Info.plist 登记 14 条 alternate。🔴 换图标：iOS 17.4 模拟器正常、
   26/27 模拟器必失败、真机正常；灵动岛只能真机验。偏好三处存储，改模拟器状态要三处一起改。
@@ -162,7 +162,7 @@ cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
 - **语音录入**（2026-11-22 整块删）：`VoicePickupSheet` 全家、`VoiceSettings`、`RootTab.voice`、
   悬浮球、`WidgetLayout.voiceAdd`、`NSMicrophone`/`NSSpeechRecognition`、法务语音条款。
   `BareCodeHeuristic` 已移进 `AddPickupSheet.swift`（文本/照片共用）。
-- **分享扩展**（2026-11-22 整块删）：`AlludeShare/`、`ShareInbox.swift`、`SHARE_TEXT` 脚手架、
+- **分享扩展**（2026-11-22 整块删）：`CodelumiShare/`、`ShareInbox.swift`、`SHARE_TEXT` 脚手架、
   App 两处 drain。理由：ASC API 绑不了 App Group，卡着发不出去。
 - 「使用权限」页现 5 行：通知 / 相机 / 相册 / 定位 / iCloud 与网络。
 
@@ -175,6 +175,6 @@ cd Allude && xcodebuild -project Allude.xcodeproj -scheme Allude \
   annual 挂订阅组 `22565648`，两档 `READY_TO_SUBMIT`；沙盒 `storefront=USA` 均 `$0.99`。
   价格点金额查不到（403），别试。
 - 免费额度：`freeVisible = 4`、`freeStorage = 50`、`widgetListCap = 60`。App 备案未完成。
-- 法务线上仓 `Zhangwangning/allude-legal`（GitHub Pages），App 内 `Allude/Allude/Legal/*.html` 三副本同步。
+- 法务线上仓 `Zhangwangning/codelumi-legal`（GitHub Pages），App 内 `Codelumi/Codelumi/Legal/*.html` 三副本同步。
 - 性能范式：缓存放 model（`@StateObject` 的 class）不放 View 的 `@State`；键用 `hashValue`；
   `VStack` → `LazyVStack` 可消首帧冻结（代价 `proxy.scrollTo` 失效）。

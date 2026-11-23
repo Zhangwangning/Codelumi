@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""把 App 导出的 `allude-training.jsonl` 并入标注模板。
+"""把 App 导出的 `codelumi-training.jsonl` 并入标注模板。
 
 用法：
-    python3 tools/annotation/import-training.py allude-training.jsonl
+    python3 tools/annotation/import-training.py codelumi-training.jsonl
     # 默认并入 标注模板_定稿.tsv（已有的保持不变，只在末尾追加新样本）
-    python3 tools/annotation/import-training.py allude-training.jsonl --target 标注模板_定稿.tsv
+    python3 tools/annotation/import-training.py codelumi-training.jsonl --target 标注模板_定稿.tsv
 
 输入：每行一个 JSON，字段来自 App 的 TrainingSample：
     {text, label, code?, address?, note?, createdAt, appVersion, osVersion, machine}
@@ -20,7 +20,7 @@ import sys
 import csv
 from pathlib import Path
 
-src = Path(sys.argv[1] if len(sys.argv) > 1 else "allude-training.jsonl")
+src = Path(sys.argv[1] if len(sys.argv) > 1 else "codelumi-training.jsonl")
 target = Path("标注模板_定稿.tsv")
 if "--target" in sys.argv:
     target = Path(sys.argv[sys.argv.index("--target") + 1])

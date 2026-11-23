@@ -567,7 +567,7 @@ final class BatchPageController: NSViewController {
 
         summary.stringValue = "成功 \(okCount) / 共 \(codes.count) 张"
         summary.textColor = okCount == codes.count ? C.ok : C.warn
-        if okCount > 0 { NotificationCenter.default.post(name: .alludeLedgerChanged, object: nil) }
+        if okCount > 0 { NotificationCenter.default.post(name: .codelumiLedgerChanged, object: nil) }
     }
 }
 
@@ -790,7 +790,7 @@ final class LedgerPageController: NSViewController {
 
         view = root
         NotificationCenter.default.addObserver(self, selector: #selector(reload),
-                                               name: .alludeLedgerChanged, object: nil)
+                                               name: .codelumiLedgerChanged, object: nil)
         reload()
     }
 

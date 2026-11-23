@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Allude · 真机安装脚本（免费 Personal Team 自动签名路径）
+# Codelumi · 真机安装脚本（免费 Personal Team 自动签名路径）
 #
 # 背景：免费 Apple ID 签名的描述文件只有 **7 天**有效期，到期后 App 图标点不开，
 #       重跑本脚本即可续签，无需打开 Xcode 图形界面。
@@ -17,7 +17,7 @@
 #   2) iPhone → 设置 → 隐私与安全性 → 开发者模式 → 打开 → 重启确认
 #   3) iPhone 数据线连 Mac，弹窗点「信任此电脑」并输锁屏密码
 #
-# 说明：App Group（group.com.jikezhang.allude）是小组件共享数据的通道。
+# 说明：App Group（group.com.jikezhang.codelumi）是小组件共享数据的通道。
 #       免费账号通常签不下来该能力，此时用 --no-appgroup 装：App 本体功能完整，
 #       仅小组件读不到数据（PickupStorage 已做回落，不会崩）。
 #       拿到付费账号后执行 --restore 并重装即可恢复小组件。
@@ -33,12 +33,12 @@ else
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJ_ROOT="$SCRIPT_DIR/../Allude"
-PROJ="$PROJ_ROOT/Allude.xcodeproj"
+PROJ_ROOT="$SCRIPT_DIR/../Codelumi"
+PROJ="$PROJ_ROOT/Codelumi.xcodeproj"
 CFG_DIR="$PROJ_ROOT/Config"
-DD="/tmp/allude-device"
-BUNDLE_ID="com.jikezhang.allude"
-SCHEME="Allude"
+DD="/tmp/codelumi-device"
+BUNDLE_ID="com.jikezhang.codelumi"
+SCHEME="Codelumi"
 
 # 🔴 Xcode 27 beta 下 `xcrun` 不把 devicectl 暴露为可查找工具（xcrun --find 会报
 #    "unable to find utility"），但二进制实际存在于 Developer/usr/bin/。
@@ -70,7 +70,7 @@ done
 # ── 1. 恢复 App Group ────────────────────────────────────────────────
 if [[ "$MODE" == "restore" ]]; then
   restored=0
-  for f in "$CFG_DIR"/Allude.entitlements "$CFG_DIR"/AlludeWidget.entitlements; do
+  for f in "$CFG_DIR"/Codelumi.entitlements "$CFG_DIR"/CodelumiWidget.entitlements; do
     if [[ -f "$f.appgroup-backup" ]]; then
       mv -f "$f.appgroup-backup" "$f"
       ok "已恢复 $(basename "$f")"
@@ -85,7 +85,7 @@ fi
 
 # ── 2. 摘掉 App Group ────────────────────────────────────────────────
 if [[ "$MODE" == "no-appgroup" ]]; then
-  for f in "$CFG_DIR"/Allude.entitlements "$CFG_DIR"/AlludeWidget.entitlements; do
+  for f in "$CFG_DIR"/Codelumi.entitlements "$CFG_DIR"/CodelumiWidget.entitlements; do
     [[ -f "$f.appgroup-backup" ]] || cp -p "$f" "$f.appgroup-backup"
     cat > "$f" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -136,8 +136,8 @@ if [[ -n "$TEAM" ]] && ! [[ "$TEAM" =~ ^[A-Z0-9]{10}$ ]]; then
 fi
 if [[ -z "$TEAM" ]]; then
   die "取不到 Team ID。请二选一：
-    A) 在 Xcode 里打开工程 → 选 Allude target → Signing & Capabilities
-       → Team 下拉选「<你的名字> (Personal Team)」，AlludeWidget target 也选一遍；
+    A) 在 Xcode 里打开工程 → 选 Codelumi target → Signing & Capabilities
+       → Team 下拉选「<你的名字> (Personal Team)」，CodelumiWidget target 也选一遍；
     B) 重跑本脚本并加 --team XXXXXXXXXX（Team ID 可在 Xcode 账号页查到）。"
 fi
 ok "Team ID：$TEAM"
@@ -191,29 +191,29 @@ xcodebuild -project "$PROJ" \
            -derivedDataPath "$DD" \
            -allowProvisioningUpdates \
            OTHER_SWIFT_FLAGS="-disable-sandbox" \
-           build > /tmp/allude-device-build.log 2>&1
+           build > /tmp/codelumi-device-build.log 2>&1
 rc=$?
 set -e
 # 🔴 不要写成 `xcodebuild ... | tee log | grep ...` 再取 PIPESTATUS：
 #    `|| true` 会重置 PIPESTATUS，导致构建失败也拿到 rc=0，
 #    随后把空的 .app 目录当产物去安装（报 Info.plist missing）。2026-10-30 修。
 grep -E "error:|warning:|CodeSign|BUILD SUCCEEDED|BUILD FAILED|No profiles|doesn't include" \
-  /tmp/allude-device-build.log || true
+  /tmp/codelumi-device-build.log || true
 
 if [[ $rc -ne 0 ]]; then
   say ""
-  if grep -q "application-groups" /tmp/allude-device-build.log; then
+  if grep -q "application-groups" /tmp/codelumi-device-build.log; then
     warn "签名被 App Group 拦下 —— 这正是免费账号的已知限制。"
     say ""
     say "  解决办法：改用降级模式重装"
     say "    ${C_DIM}$0 --no-appgroup${C_OFF}"
     say ""
-  elif grep -qi "developer mode" /tmp/allude-device-build.log; then
+  elif grep -qi "developer mode" /tmp/codelumi-device-build.log; then
     warn "iPhone 尚未开启开发者模式。"
     say "  设置 → 隐私与安全性 → 开发者模式 → 打开 → 重启 → 确认"
     say ""
   else
-    warn "构建失败，完整日志：/tmp/allude-device-build.log"
+    warn "构建失败，完整日志：/tmp/codelumi-device-build.log"
     say "  常见原因：Apple ID 未登录 / 描述文件额度用尽（免费账号 7 天 10 个 App ID）"
     say ""
   fi
@@ -226,14 +226,14 @@ APP="$(find "$DD/Build/Products/Debug-iphoneos" -maxdepth 1 -name "$SCHEME.app" 
 [[ -n "$APP" ]] || die "找不到构建产物 $SCHEME.app"
 # 🔴 只判断目录存在不够：构建失败时 xcodebuild 会留下一个空壳 .app 目录，
 #    安装时才报 "Info.plist: missing"。这里前置校验，把问题挡在安装之前。
-[[ -f "$APP/Info.plist" ]] || die "产物不完整（缺 Info.plist）：$APP —— 构建实际失败，请查 /tmp/allude-device-build.log"
+[[ -f "$APP/Info.plist" ]] || die "产物不完整（缺 Info.plist）：$APP —— 构建实际失败，请查 /tmp/codelumi-device-build.log"
 
 say ""
 say "── 安装到 iPhone ────────────────────────────────"
 "$DEVICECTL" device install app --device "$DEV_UDID" "$APP"
 
 say ""
-PROFILE="$DD/Build/Products/Debug-iphoneos/Allude.app/embedded.mobileprovision"
+PROFILE="$DD/Build/Products/Debug-iphoneos/Codelumi.app/embedded.mobileprovision"
 if [[ -f "$PROFILE" ]]; then
   EXP="$(security cms -D -i "$PROFILE" 2>/dev/null \
         | plutil -convert xml1 -o - - 2>/dev/null \

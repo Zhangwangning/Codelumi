@@ -2,8 +2,8 @@
 //
 // 用法：
 //   swiftc -O -o /tmp/notify-check \
-//     "/Volumes/ZWN/Downloads/Project/Allude/Allude/Allude/Models/PickupNotifier.swift" \
-//     /Volumes/ZWN/Downloads/Project/Allude/tools/notify-check/main.swift
+//     "/Volumes/ZWN/Downloads/Project/Codelumi/Codelumi/Codelumi/Models/PickupNotifier.swift" \
+//     /Volumes/ZWN/Downloads/Project/Codelumi/tools/notify-check/main.swift
 //   /tmp/notify-check
 //
 // 为什么需要这个脚本：通知是**唯一没法在模拟器里自动验证**的东西 ——
@@ -47,7 +47,7 @@ enum PickupStorage {
     static func load() -> [PickupRecord] { [] }
 }
 
-/// 提醒排期会读权益档位（超时提醒、重复提醒都是 Allude Pro）。
+/// 提醒排期会读权益档位（超时提醒、重复提醒都是 Codelumi Pro）。
 /// 自检只测文案映射，恒按 Pro 跑即可，不牵进真正的权益验签链路。
 enum EntitlementSnapshot {
     static var licensedPro: Bool { true }
@@ -175,7 +175,7 @@ for title in titles { print("     · \(title)") }
 // MARK: - 7. 归组标识
 
 print("\n── 7. 归组 ──")
-expect(PickupNotifier.threadID == "com.jikezhang.allude.pickup",
+expect(PickupNotifier.threadID == "com.jikezhang.codelumi.pickup",
        "threadIdentifier 固定为 \(PickupNotifier.threadID)（同批折叠成一组）")
 
 print(failures == 0 ? "\n全部通过" : "\n✗ 有 \(failures) 项未通过")

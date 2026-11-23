@@ -1,0 +1,671 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0000000000000000000E02 /* StationGroups.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000E01 /* StationGroups.swift */; };
+		AA0000000000000000000E03 /* StationGroups.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000E01 /* StationGroups.swift */; };
+		AA000000000000000000001E /* CodelumiWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000010 /* CodelumiWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA0000000000000000000030 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* AppTheme.swift */; };
+		AA0000000000000000000031 /* CourierBrand.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* CourierBrand.swift */; };
+		AA0000000000000000000032 /* PickupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* PickupModels.swift */; };
+		AA0000000000000000000033 /* PickupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000023 /* PickupStorage.swift */; };
+		AA0000000000000000000034 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* AppTheme.swift */; };
+		AA0000000000000000000035 /* CourierBrand.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* CourierBrand.swift */; };
+		AA0000000000000000000036 /* PickupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* PickupModels.swift */; };
+		AA0000000000000000000037 /* PickupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000023 /* PickupStorage.swift */; };
+		AA0000000000000000000038 /* CodelumiWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* CodelumiWidgetBundle.swift */; };
+		AA00000000000000000111 /* WidgetTransparency.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000110 /* WidgetTransparency.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		AA0000000000000000000039 /* PickupWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000025 /* PickupWidget.swift */; };
+		AA000000000000000000003A /* PickupWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000026 /* PickupWidgetIntent.swift */; };
+		AA000000000000000000003B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000027 /* Assets.xcassets */; };
+		AA000000000000000000003C /* WidgetVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003D /* WidgetVisuals.swift */; };
+		AA000000000000000000003E /* WidgetVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003D /* WidgetVisuals.swift */; };
+		AA0000000000000000000F02 /* WidgetPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F01 /* WidgetPresets.swift */; };
+		AA0000000000000000000F03 /* WidgetPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F01 /* WidgetPresets.swift */; };
+		AA0000000000000000000040 /* BrandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003F /* BrandPalette.swift */; };
+		AA0000000000000000000041 /* BrandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003F /* BrandPalette.swift */; };
+		AA0000000000000000000042 /* PickupActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000044 /* PickupActivityAttributes.swift */; };
+		AA0000000000000000000043 /* PickupActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000044 /* PickupActivityAttributes.swift */; };
+		AA0000000000000000000045 /* PickupLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000046 /* PickupLiveActivity.swift */; };
+		AA0000000000000000000048 /* PickupActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000047 /* PickupActivityController.swift */; };
+		AA0000000000000000000049 /* PickupActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000047 /* PickupActivityController.swift */; };
+		AA000000000000000000004B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000004A /* Assets.xcassets */; };
+		AA000000000000000000004C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000004A /* Assets.xcassets */; };
+		AA0000000000000000000051 /* OfflineLicense.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000050 /* OfflineLicense.swift */; };
+		AA0000000000000000000052 /* OfflineLicense.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000050 /* OfflineLicense.swift */; };
+		AA0000000000000000000054 /* LicenseDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000053 /* LicenseDevice.swift */; };
+		AA0000000000000000000055 /* LicenseDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000053 /* LicenseDevice.swift */; };
+		AA0000000000000000000061 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000060 /* PrivacyInfo.xcprivacy */; };
+		AA0000000000000000000063 /* AppIconChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000062 /* AppIconChoice.swift */; };
+		AA0000000000000000000064 /* AppIconChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000062 /* AppIconChoice.swift */; };
+		AA00000000000000000000F2 /* FontScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F1 /* FontScale.swift */; };
+		AA00000000000000000000F3 /* FontScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F1 /* FontScale.swift */; };
+		AA00000000000000000000F5 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F4 /* Localization.swift */; };
+		AA00000000000000000000F6 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F4 /* Localization.swift */; };
+		AA00000000000000000000F8 /* BrandDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F7 /* BrandDebug.swift */; };
+		AA00000000000000000000F9 /* BrandDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000F7 /* BrandDebug.swift */; };
+		AA00000000000000000000FB /* PickupActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000FA /* PickupActivityIntents.swift */; };
+		AA00000000000000000000FC /* PickupActivityIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000FA /* PickupActivityIntents.swift */; };
+		AA0000000000000000000102 /* GlassCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000101 /* GlassCompat.swift */; };
+		AA0000000000000000000103 /* GlassCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000101 /* GlassCompat.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AA000000000000000000001A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000011;
+			remoteInfo = CodelumiWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA0000000000000000000018 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA000000000000000000001E /* CodelumiWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AA0000000000000000000E01 /* StationGroups.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationGroups.swift; sourceTree = "<group>"; };
+		AA0000000000000000000003 /* Codelumi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codelumi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000010 /* CodelumiWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CodelumiWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000020 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		AA0000000000000000000021 /* CourierBrand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourierBrand.swift; sourceTree = "<group>"; };
+		AA0000000000000000000022 /* PickupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000023 /* PickupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupStorage.swift; sourceTree = "<group>"; };
+		AA0000000000000000000024 /* CodelumiWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodelumiWidgetBundle.swift; sourceTree = "<group>"; };
+		AA00000000000000000110 /* WidgetTransparency.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = WidgetTransparency.mm; sourceTree = "<group>"; };
+		AA0000000000000000000025 /* PickupWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupWidget.swift; sourceTree = "<group>"; };
+		AA0000000000000000000026 /* PickupWidgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupWidgetIntent.swift; sourceTree = "<group>"; };
+		AA0000000000000000000027 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000028 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0000000000000000000029 /* Codelumi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Codelumi.entitlements; sourceTree = "<group>"; };
+		AA000000000000000000002A /* CodelumiWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CodelumiWidget.entitlements; sourceTree = "<group>"; };
+		AA000000000000000000003D /* WidgetVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetVisuals.swift; sourceTree = "<group>"; };
+		AA0000000000000000000F01 /* WidgetPresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPresets.swift; sourceTree = "<group>"; };
+		AA000000000000000000003F /* BrandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandPalette.swift; sourceTree = "<group>"; };
+		AA0000000000000000000044 /* PickupActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupActivityAttributes.swift; sourceTree = "<group>"; };
+		AA0000000000000000000046 /* PickupLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupLiveActivity.swift; sourceTree = "<group>"; };
+		AA0000000000000000000047 /* PickupActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupActivityController.swift; sourceTree = "<group>"; };
+		AA000000000000000000004A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000050 /* OfflineLicense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineLicense.swift; sourceTree = "<group>"; };
+		AA0000000000000000000053 /* LicenseDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseDevice.swift; sourceTree = "<group>"; };
+		AA0000000000000000000060 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AA0000000000000000000062 /* AppIconChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconChoice.swift; sourceTree = "<group>"; };
+		AA00000000000000000000F1 /* FontScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontScale.swift; sourceTree = "<group>"; };
+		AA00000000000000000000F4 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		AA00000000000000000000F7 /* BrandDebug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandDebug.swift; sourceTree = "<group>"; };
+		AA00000000000000000000FA /* PickupActivityIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupActivityIntents.swift; sourceTree = "<group>"; };
+		AA0000000000000000000101 /* GlassCompat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCompat.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AA0000000000000000000004 /* Codelumi */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Codelumi;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000013 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000000000000000000005 = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000004 /* Codelumi */,
+				AA000000000000000000001B /* CodelumiShared */,
+				AA000000000000000000001C /* CodelumiWidget */,
+				AA000000000000000000001D /* Config */,
+				AA0000000000000000000006 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000006 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000003 /* Codelumi.app */,
+				AA0000000000000000000010 /* CodelumiWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000001B /* CodelumiShared */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000020 /* AppTheme.swift */,
+				AA0000000000000000000101 /* GlassCompat.swift */,
+				AA00000000000000000000FA /* PickupActivityIntents.swift */,
+				AA00000000000000000000F7 /* BrandDebug.swift */,
+				AA00000000000000000000F4 /* Localization.swift */,
+				AA00000000000000000000F1 /* FontScale.swift */,
+				AA0000000000000000000021 /* CourierBrand.swift */,
+				AA0000000000000000000022 /* PickupModels.swift */,
+				AA0000000000000000000023 /* PickupStorage.swift */,
+				AA0000000000000000000062 /* AppIconChoice.swift */,
+				AA000000000000000000003D /* WidgetVisuals.swift */,
+				AA0000000000000000000F01 /* WidgetPresets.swift */,
+				AA000000000000000000003F /* BrandPalette.swift */,
+				AA0000000000000000000044 /* PickupActivityAttributes.swift */,
+				AA0000000000000000000047 /* PickupActivityController.swift */,
+				AA000000000000000000004A /* Assets.xcassets */,
+				AA0000000000000000000050 /* OfflineLicense.swift */,
+				AA0000000000000000000053 /* LicenseDevice.swift */,
+				AA0000000000000000000E01 /* StationGroups.swift */,
+			);
+			path = CodelumiShared;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000001C /* CodelumiWidget */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000024 /* CodelumiWidgetBundle.swift */,
+				AA0000000000000000000025 /* PickupWidget.swift */,
+				AA0000000000000000000026 /* PickupWidgetIntent.swift */,
+				AA00000000000000000110 /* WidgetTransparency.mm */,
+				AA0000000000000000000046 /* PickupLiveActivity.swift */,
+				AA0000000000000000000027 /* Assets.xcassets */,
+				AA0000000000000000000060 /* PrivacyInfo.xcprivacy */,
+				AA0000000000000000000028 /* Info.plist */,
+			);
+			path = CodelumiWidget;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000001D /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000029 /* Codelumi.entitlements */,
+				AA000000000000000000002A /* CodelumiWidget.entitlements */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0000000000000000000002 /* Codelumi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000000000000000000000B /* Build configuration list for PBXNativeTarget "Codelumi" */;
+			buildPhases = (
+				AA0000000000000000000007 /* Sources */,
+				AA0000000000000000000008 /* Frameworks */,
+				AA0000000000000000000009 /* Resources */,
+				AA0000000000000000000018 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA0000000000000000000019 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AA0000000000000000000004 /* Codelumi */,
+			);
+			name = Codelumi;
+			packageProductDependencies = (
+			);
+			productName = Codelumi;
+			productReference = AA0000000000000000000003 /* Codelumi.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AA0000000000000000000011 /* CodelumiWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000015 /* Build configuration list for PBXNativeTarget "CodelumiWidget" */;
+			buildPhases = (
+				AA0000000000000000000012 /* Sources */,
+				AA0000000000000000000013 /* Frameworks */,
+				AA0000000000000000000014 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CodelumiWidget;
+			packageProductDependencies = (
+			);
+			productName = CodelumiWidget;
+			productReference = AA0000000000000000000010 /* CodelumiWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					AA0000000000000000000002 = {
+						CreatedOnToolsVersion = 27.0;
+						SystemCapabilities = {
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
+					};
+					AA0000000000000000000011 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = AA000000000000000000000A /* Build configuration list for PBXProject "Codelumi" */;
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+				"zh-Hant",
+			);
+			mainGroup = AA0000000000000000000005;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AA0000000000000000000006 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA0000000000000000000002 /* Codelumi */,
+				AA0000000000000000000011 /* CodelumiWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000000000000000000004B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000014 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000000000000000000003B /* Assets.xcassets in Resources */,
+				AA000000000000000000004C /* Assets.xcassets in Resources */,
+				AA0000000000000000000061 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000030 /* AppTheme.swift in Sources */,
+				AA0000000000000000000102 /* GlassCompat.swift in Sources */,
+				AA00000000000000000000FB /* PickupActivityIntents.swift in Sources */,
+				AA00000000000000000000F8 /* BrandDebug.swift in Sources */,
+				AA00000000000000000000F5 /* Localization.swift in Sources */,
+				AA00000000000000000000F2 /* FontScale.swift in Sources */,
+				AA0000000000000000000031 /* CourierBrand.swift in Sources */,
+				AA0000000000000000000032 /* PickupModels.swift in Sources */,
+				AA0000000000000000000033 /* PickupStorage.swift in Sources */,
+				AA0000000000000000000063 /* AppIconChoice.swift in Sources */,
+				AA000000000000000000003C /* WidgetVisuals.swift in Sources */,
+				AA0000000000000000000F02 /* WidgetPresets.swift in Sources */,
+				AA0000000000000000000040 /* BrandPalette.swift in Sources */,
+				AA0000000000000000000042 /* PickupActivityAttributes.swift in Sources */,
+				AA0000000000000000000048 /* PickupActivityController.swift in Sources */,
+				AA0000000000000000000051 /* OfflineLicense.swift in Sources */,
+				AA0000000000000000000054 /* LicenseDevice.swift in Sources */,
+				AA0000000000000000000E02 /* StationGroups.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000034 /* AppTheme.swift in Sources */,
+				AA0000000000000000000103 /* GlassCompat.swift in Sources */,
+				AA00000000000000000000FC /* PickupActivityIntents.swift in Sources */,
+				AA00000000000000000000F9 /* BrandDebug.swift in Sources */,
+				AA00000000000000000000F6 /* Localization.swift in Sources */,
+				AA00000000000000000000F3 /* FontScale.swift in Sources */,
+				AA0000000000000000000035 /* CourierBrand.swift in Sources */,
+				AA0000000000000000000036 /* PickupModels.swift in Sources */,
+				AA0000000000000000000037 /* PickupStorage.swift in Sources */,
+				AA0000000000000000000064 /* AppIconChoice.swift in Sources */,
+				AA000000000000000000003E /* WidgetVisuals.swift in Sources */,
+				AA0000000000000000000F03 /* WidgetPresets.swift in Sources */,
+				AA0000000000000000000041 /* BrandPalette.swift in Sources */,
+				AA0000000000000000000038 /* CodelumiWidgetBundle.swift in Sources */,
+				AA0000000000000000000039 /* PickupWidget.swift in Sources */,
+				AA00000000000000000111 /* WidgetTransparency.mm in Sources */,
+				AA000000000000000000003A /* PickupWidgetIntent.swift in Sources */,
+				AA0000000000000000000043 /* PickupActivityAttributes.swift in Sources */,
+				AA0000000000000000000045 /* PickupLiveActivity.swift in Sources */,
+				AA0000000000000000000049 /* PickupActivityController.swift in Sources */,
+				AA0000000000000000000052 /* OfflineLicense.swift in Sources */,
+				AA0000000000000000000055 /* LicenseDevice.swift in Sources */,
+				AA0000000000000000000E03 /* StationGroups.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA0000000000000000000019 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000011 /* CodelumiWidget */;
+			targetProxy = AA000000000000000000001A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AA000000000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA000000000000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA000000000000000000000E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/Codelumi.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 349;
+				DEVELOPMENT_TEAM = 8499X3S9X8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Codelumi;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "用于扫描取件码二维码与快递面单条码，识别后自动填入待取件列表。";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "保存分享图到相册时使用。";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jikezhang.codelumi;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA000000000000000000000F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/Codelumi.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 349;
+				DEVELOPMENT_TEAM = 8499X3S9X8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Codelumi;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "用于扫描取件码二维码与快递面单条码，识别后自动填入待取件列表。";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "保存分享图到相册时使用。";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jikezhang.codelumi;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		AA0000000000000000000016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = Config/CodelumiWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 349;
+				DEVELOPMENT_TEAM = 8499X3S9X8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CodelumiWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Codelumi;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jikezhang.codelumi.CodelumiWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000017 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = Config/CodelumiWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 349;
+				DEVELOPMENT_TEAM = 8499X3S9X8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CodelumiWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Codelumi;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jikezhang.codelumi.CodelumiWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000000000000000000000A /* Build configuration list for PBXProject "Codelumi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000000000000000000000C /* Debug */,
+				AA000000000000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000000000000000000000B /* Build configuration list for PBXNativeTarget "Codelumi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000000000000000000000E /* Debug */,
+				AA000000000000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000015 /* Build configuration list for PBXNativeTarget "CodelumiWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000016 /* Debug */,
+				AA0000000000000000000017 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA0000000000000000000001 /* Project object */;
+}

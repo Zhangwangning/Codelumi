@@ -14,13 +14,18 @@ device: no network calls, nothing uploaded, no account.
 | Name | Codelumi / 珞米 (1.0.0, build 325) |
 | Platform | iOS 17 and later (iPhone; iPhone Duo foldable has its own layout work) |
 | Project | Plain Xcode project, SwiftUI, no SPM packages, no third-party libraries |
-| Layout | repository root `Allude/` → project root `Allude/` → `Allude/` (app), `AlludeShared/` (shared with the widget), `AlludeWidget/` (widget extension) |
+| Layout | repository root `Codelumi/` → project root `Codelumi/` → `Codelumi/` (app), `CodelumiShared/` (shared with the widget), `CodelumiWidget/` (widget extension) |
 | Status | In TestFlight beta; the App Store version is in the review pipeline |
 
-The user-facing name is **Codelumi** (Chinese: 珞米). Internal identifiers (bundle ID,
-App Group, iCloud container, widget kind, repository path) are still `allude` and have
-not changed since the first build — changing them would orphan users' data containers.
-The rename history is 拾码 → Allude → Codelumi.
+The user-facing name is **Codelumi** (Chinese: 珞米). Every identifier now matches it:
+bundle ID `com.jikezhang.codelumi`, App Group `group.com.jikezhang.codelumi`, iCloud
+container `iCloud.com.jikezhang.codelumi`, widget extension `CodelumiWidget`, repository
+and Xcode project `Codelumi`. The rename history is 拾码 (the shortcut) → Allude (the
+working name of the first builds) → Codelumi.
+
+Codelumi is a standalone, offline tool. Its feature set comes from the author's own
+open-source Shortcuts project and from parcel-pickup workflows in daily use — it does
+not take features or interface from other apps.
 
 ## Where the idea came from: a shortcut first
 
@@ -50,7 +55,7 @@ not an invented feature. But a shortcut has a ceiling: no list, no search, no
 grouping or sorting, no reminders or widget, one more "automation ran" notification
 per execution, and the rules hard-coded inside a single action.
 
-So the parsing rules were moved into a native app — that is Allude. The shortcut
+So the parsing rules were moved into a native app — that is Codelumi. The shortcut
 project and its corpus are still part of this repository, and the app's parser grew
 directly out of them: four regular-expression families, the same priority chain,
 the same field conventions, then extended rule by rule against real messages.
@@ -72,7 +77,7 @@ the same field conventions, then extended rule by rule against real messages.
 
 Three routes, the user picks one:
 
-- On iOS 27, import a "when I receive a message containing X → add to Allude"
+- On iOS 27, import a "when I receive a message containing X → add to Codelumi"
   automation in one step (older systems: build one by hand, there is a tutorial in the app)
 - Screenshot intake: pick an image, read the text
 - Paste the whole SMS manually
@@ -109,7 +114,7 @@ it is exceeded the oldest records are dropped first — and only while a new mes
 is being ingested, never on launch.
 
 iCloud sync is optional: records are written into **your own** iCloud Drive
-(`Documents/Allude/records.json`), never through a developer server. Merging happens
+(`Documents/Codelumi/records.json`), never through a developer server. Merging happens
 per record — the newer `updatedAt` wins — and deletions leave tombstones so another
 device does not resurrect them.
 
@@ -130,7 +135,7 @@ out, and no channel to do it through.**
 - No networking code. Verify it yourself:
 
 ```bash
-grep -rn "URLSession\|URLRequest\|NSURLConnection" Allude/Allude Allude/AlludeShared Allude/AlludeWidget
+grep -rn "URLSession\|URLRequest\|NSURLConnection" Codelumi/Codelumi Codelumi/CodelumiShared Codelumi/CodelumiWidget
 # no output
 ```
 
@@ -144,10 +149,10 @@ grep -rn "URLSession\|URLRequest\|NSURLConnection" Allude/Allude Allude/AlludeSh
 ## Build
 
 ```bash
-cd Allude
-xcodebuild -project Allude.xcodeproj -scheme Allude \
+cd Codelumi
+xcodebuild -project Codelumi.xcodeproj -scheme Codelumi \
   -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath /tmp/allude-verify build \
+  -derivedDataPath /tmp/codelumi-verify build \
   CODE_SIGNING_ALLOWED=NO OTHER_SWIFT_FLAGS="-disable-sandbox"
 ```
 
@@ -174,7 +179,7 @@ Every harness's `main.swift` header lists its full compile command. For example:
 
 ```bash
 swiftc -O -o /tmp/parser-regression \
-  Allude/Allude/Models/PickupParser.swift tools/parser-regression/main.swift && \
+  Codelumi/Codelumi/Models/PickupParser.swift tools/parser-regression/main.swift && \
 /tmp/parser-regression 短信语料库_v1.md
 # current baseline: 193/514 codes, 192/514 addresses
 ```

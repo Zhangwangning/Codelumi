@@ -1,0 +1,74 @@
+{
+  "identifier": "8C1F2A64-3E7B-4D51-9A2C-5B7E9D0F4C31",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "9F3A21C7",
+      "localizations": [
+        {
+          "description": "一次买断，永久使用完整版。",
+          "displayName": "终身",
+          "locale": "zh_CN"
+        },
+        {
+          "description": "One-time purchase, lifetime access.",
+          "displayName": "Lifetime",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.jikezhang.codelumi.pro.lifetime",
+      "referenceName": "终身（买断）",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_applicationInternalID": "0000000000",
+    "_developerTeamID": "8499X3S9X8",
+    "_failTransactionsEnabled": false,
+    "_lastSynchronizedDate": 0,
+    "_locale": "zh_CN",
+    "_storefront": "CHN",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [
+    {
+      "id": "4E7C1B90-2D33-4A61-8F0E-6C5B7A9D2E11",
+      "localizations": [],
+      "name": "完整版",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "1.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "E5F6A7B8",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "按年订阅完整版，自动续期。",
+              "displayName": "每年",
+              "locale": "zh_CN"
+            },
+            {
+              "description": "Yearly subscription with automatic renewal.",
+              "displayName": "Yearly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.jikezhang.codelumi.pro.annual",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "每年",
+          "subscriptionGroupID": "4E7C1B90-2D33-4A61-8F0E-6C5B7A9D2E11",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

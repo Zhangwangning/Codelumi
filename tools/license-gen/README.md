@@ -1,4 +1,4 @@
-# Allude · 离线凭证签发工具
+# Codelumi · 离线凭证签发工具
 
 这是**卖家侧**（也就是你）用的工具，不是给用户的。用户侧只有一个入口：
 App 的「我的 › VIP 模式 › 导入凭证」。
@@ -16,7 +16,7 @@ App 的「我的 › VIP 模式 › 导入凭证」。
 - 不进 App 包
 - 换机器时手工拷过去；**丢了就再也签不出能被 App 接受的码**
 
-对应的公钥硬编码在 App 的 `AlludeShared/OfflineLicense.swift`
+对应的公钥硬编码在 App 的 `CodelumiShared/OfflineLicense.swift`
 （`LicenseVerifier.publicKeysBase64`）。
 
 > 🔴 私钥泄露 = 任何人都能自造永久会员，且没有补救手段。
@@ -136,7 +136,7 @@ cd macapp && ./build.sh          # 仅构建，产物：macapp/build/发码.app
 **这一步不只是图方便** —— 仓库在外挂卷上，而 `open` 启动的 App 读该卷文件会被
 内核门禁永久挂起（详见下节）。装到本机卷后，这个风险从根上消失。
 
-App 的数据（私钥、台账）本来就落在 `~/Library/Application Support/AlludeIssuer/`，
+App 的数据（私钥、台账）本来就落在 `~/Library/Application Support/CodelumiIssuer/`，
 仓库只作一次性导入来源，所以安装副本是**自包含**的，不需要仓库在场也能跑。
 
 > 装到 `/Applications` 后，「导入来源目录」的默认推算会失效（`build/发码.app`
@@ -188,7 +188,7 @@ App 的数据（私钥、台账）本来就落在 `~/Library/Application Support
 
 | 菜单 | 内容 |
 |---|---|
-| 发码 | 关于「Allude 发码」· 服务 · 隐藏 ⌘H · 隐藏其他 ⌥⌘H · 退出 ⌘Q |
+| 发码 | 关于「Codelumi 发码」· 服务 · 隐藏 ⌘H · 隐藏其他 ⌥⌘H · 退出 ⌘Q |
 | 编辑 | 撤销 ⌘Z · 重做 ⇧⌘Z · 剪切 ⌘X · 拷贝 ⌘C · 粘贴 ⌘V · 粘贴并匹配样式 ⌥⇧⌘V · 删除 · 全选 ⌘A |
 | 窗口 | 关闭窗口 ⌘W · 最小化 ⌘M · 缩放 · 前置全部窗口 |
 
@@ -247,7 +247,7 @@ App 的数据（私钥、台账）本来就落在 `~/Library/Application Support
 xcrun swift macapp/icon/make_icon.swift   # 产出 icon/AppIcon.icns
 ```
 
-视觉沿用Allude的品牌基因（亮蓝底 + 白色卡片叠层 + 蓝色扫描框 + 青绿/橙黄点缀），
+视觉沿用Codelumi的品牌基因（亮蓝底 + 白色卡片叠层 + 蓝色扫描框 + 青绿/橙黄点缀），
 但按 macOS 规范重绘：
 
 | 项 | 取值 | 说明 |
@@ -275,7 +275,7 @@ App 即可独立运行：
 
 | | 路径 |
 |---|---|
-| 本机容器（App 读写此处） | `~/Library/Application Support/AlludeIssuer/` |
+| 本机容器（App 读写此处） | `~/Library/Application Support/CodelumiIssuer/` |
 | 仓库目录（同步来源） | `tools/license-gen/` |
 
 App 每签一张，追加到的是**容器**里那份台账；跑一次同步脚本即可带回仓库

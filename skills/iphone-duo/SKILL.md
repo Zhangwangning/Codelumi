@@ -1,7 +1,7 @@
 ---
 name: iphone-duo
 description: iPhone Duo（折叠 iPhone）适配的完整做法。用于：App 在 Duo 上出现「看得见点不动 / 布局被拉宽 / 控件压在摄像头或折痕上 / 分栏与单列乱跳 / 侧边竖排标签栏行为不对」；要给一块界面做「外屏 compact / 内屏 regular / 横竖 / 折叠态」四态适配；或者要在没有真机的情况下用模拟器 + 探针取证。按 尺寸判定 → 系统容器 → 保留区 → 垂直控制 → 排列视图 → 验收 的次序做，每一步都给出可执行命令与判据。
-license: 内部使用（Allude 项目自有）
+license: 内部使用（Codelumi 项目自有）
 sources: Apple HIG《针对 iPhone Duo 设计》(2026-09-09) + HIG《布局》(2026-09-09) + 《Preparing your app for iPhone Duo》 + 本项目 2026-11 的模拟器实测
 ---
 

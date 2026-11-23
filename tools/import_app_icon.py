@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Allude · App 图标导入器
+Codelumi · App 图标导入器
 ================================
 
 把设计稿导出的图标（圆角方形 PNG、圆角外透明）规范化为 iOS 要求的
@@ -58,7 +58,7 @@ ROOT = os.path.dirname(HERE)
 
 DEFAULT_SOURCE = os.path.join(HERE, "appicon-source", "icon-source.png")
 APPICONSET = os.path.join(
-    ROOT, "Allude", "Allude", "Assets.xcassets", "AppIcon.appiconset"
+    ROOT, "Codelumi", "Codelumi", "Assets.xcassets", "AppIcon.appiconset"
 )
 
 TARGET = 1024          # iOS AppIcon 交付尺寸
@@ -211,7 +211,7 @@ def main() -> int:
     icon = build_icon(src)
     print(f"  · 输出 {icon.size[0]}×{icon.size[1]} {icon.mode}（无 alpha ✓）")
 
-    shot_dir = "/tmp/allude-icon"
+    shot_dir = "/tmp/codelumi-icon"
     p = make_preview(icon, src, shot_dir)
     print(f"  · 预览拼图 {p}")
 

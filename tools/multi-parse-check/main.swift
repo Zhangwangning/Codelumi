@@ -2,7 +2,7 @@
 //
 // 用法：
 //   swiftc -O -o /tmp/multi-parse \
-//     "…/Allude/Models/PickupParser.swift" \
+//     "…/Codelumi/Models/PickupParser.swift" \
 //     tools/multi-parse-check/main.swift
 //   /tmp/multi-parse
 //

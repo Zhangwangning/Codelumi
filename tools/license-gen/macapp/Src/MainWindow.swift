@@ -14,7 +14,7 @@ final class MainWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Allude · 发码工具"
+        window.title = "Codelumi · 发码工具"
         window.minSize = NSSize(width: T.windowMinWidth, height: T.windowMinHeight)
         self.init(window: window)
         window.contentViewController = MainViewController()
@@ -23,7 +23,7 @@ final class MainWindowController: NSWindowController {
         window.setContentSize(NSSize(width: T.windowWidth, height: T.windowHeight))
         window.center()
         // autosave 放最后：首次启动用上面的设计尺寸，之后恢复用户自己调过的尺寸
-        window.setFrameAutosaveName("AlludeIssuerMainWindow")
+        window.setFrameAutosaveName("CodelumiIssuerMainWindow")
         // 兜底：autosave 偶尔恢复出非法尺寸（实测 open 启动路径下出现过 0×0），此时回设计尺寸
         if window.frame.width < T.windowMinWidth || window.frame.height < T.windowMinHeight {
             window.setContentSize(NSSize(width: T.windowWidth, height: T.windowHeight))
@@ -52,7 +52,7 @@ final class MainViewController: NSViewController {
         root.wantsLayer = true
 
         // ── 顶部：标题 + 分段导航
-        let title = makeLabel("Allude · 发码工具", size: T.h1, weight: .semibold)
+        let title = makeLabel("Codelumi · 发码工具", size: T.h1, weight: .semibold)
         let subtitle = makeLabel("设备码 → 激活凭证 · 纯离线签发", size: T.caption, color: C.tertiary)
         let titleStack = NSStackView(views: [title, subtitle])
         titleStack.orientation = .vertical
@@ -134,7 +134,7 @@ final class MainViewController: NSViewController {
         refreshKeyStatus()      // 只读本机容器，安全；跨卷导入在 viewDidAppear 里异步发起
 
         NotificationCenter.default.addObserver(self, selector: #selector(refreshKeyStatus),
-                                               name: .alludeLedgerChanged, object: nil)
+                                               name: .codelumiLedgerChanged, object: nil)
     }
 
     override func viewDidAppear() {
@@ -210,7 +210,7 @@ final class MainViewController: NSViewController {
             case .imported(let items):
                 self.refreshKeyStatus()
                 self.keyStatus.stringValue = "✓ 已导入\(items.joined(separator: " · "))"
-                NotificationCenter.default.post(name: .alludeLedgerChanged, object: nil)
+                NotificationCenter.default.post(name: .codelumiLedgerChanged, object: nil)
             case .failed(let reason):
                 self.keyStatus.stringValue = "✗ 自动导入失败 — 请点「导入私钥…」手动选择"
                 self.keyStatus.textColor = C.bad
@@ -244,7 +244,7 @@ final class MainViewController: NSViewController {
                 switch result {
                 case .success:
                     self.refreshKeyStatus()
-                    NotificationCenter.default.post(name: .alludeLedgerChanged, object: nil)
+                    NotificationCenter.default.post(name: .codelumiLedgerChanged, object: nil)
                 case .failure(let error):
                     self.keyStatus.stringValue = "✗ 导入失败"
                     self.keyStatus.textColor = C.bad
@@ -269,7 +269,7 @@ final class MainViewController: NSViewController {
             self.autoImportStarted = false      // 换了来源，允许再自动导入一次
             self.startAutoImportIfNeeded()
             self.refreshKeyStatus()
-            NotificationCenter.default.post(name: .alludeLedgerChanged, object: nil)
+            NotificationCenter.default.post(name: .codelumiLedgerChanged, object: nil)
         }
     }
 }

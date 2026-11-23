@@ -10,17 +10,17 @@
 // 只编 PickupParser 会报 "cannot find 'PickupRecord' in scope"）：
 //   仓库根下执行：
 //   swiftc -O -o /tmp/ocr-pipeline-check \
-//     "$PWD/Allude/Allude/Models/PickupParser.swift" \
-//     "$PWD/Allude/AlludeShared/PickupModels.swift" \
-//     "$PWD/Allude/AlludeShared/CourierBrand.swift" \
-//     "$PWD/Allude/AlludeShared/BrandPalette.swift" \
-//     "$PWD/Allude/AlludeShared/PickupStorage.swift" \
-//     "$PWD/Allude/AlludeShared/StationGroups.swift" \
-//     "$PWD/Allude/AlludeShared/Localization.swift" \
-//     "$PWD/Allude/AlludeShared/AppTheme.swift" \
-//     "$PWD/Allude/AlludeShared/FontScale.swift" \
-//     "$PWD/Allude/AlludeShared/OfflineLicense.swift" \
-//     "$PWD/Allude/AlludeShared/LicenseDevice.swift" \
+//     "$PWD/Codelumi/Codelumi/Models/PickupParser.swift" \
+//     "$PWD/Codelumi/CodelumiShared/PickupModels.swift" \
+//     "$PWD/Codelumi/CodelumiShared/CourierBrand.swift" \
+//     "$PWD/Codelumi/CodelumiShared/BrandPalette.swift" \
+//     "$PWD/Codelumi/CodelumiShared/PickupStorage.swift" \
+//     "$PWD/Codelumi/CodelumiShared/StationGroups.swift" \
+//     "$PWD/Codelumi/CodelumiShared/Localization.swift" \
+//     "$PWD/Codelumi/CodelumiShared/AppTheme.swift" \
+//     "$PWD/Codelumi/CodelumiShared/FontScale.swift" \
+//     "$PWD/Codelumi/CodelumiShared/OfflineLicense.swift" \
+//     "$PWD/Codelumi/CodelumiShared/LicenseDevice.swift" \
 //     "$PWD/tools/swift-cli-shim.swift" \
 //     "$PWD/tools/ocr-pipeline-check/main.swift"
 //   /tmp/ocr-pipeline-check "$PWD/tools/ocr-pipeline-check/sms-sample.png"
@@ -33,7 +33,7 @@ import ImageIO
 
 // ⚠️ 2026-11-20：这里原本自己定义了一份最小 `PickupKind`，因为 PickupParser 只依赖
 // Foundation、可以单文件编译。现在不行了 —— `PickupParser.swift` 会调
-// `PickupRecord.addressIsShelfOnly(_:shelf:)`（在 `AlludeShared/PickupModels.swift`），
+// `PickupRecord.addressIsShelfOnly(_:shelf:)`（在 `CodelumiShared/PickupModels.swift`），
 // 所以必须把 PickupModels 一起编进来；自己再定义一份同名枚举就变成
 // 「'PickupKind' is ambiguous for type lookup in this context」。
 // 结论：本地枚举已删除，直接用 PickupModels 里的 `PickupKind`（`label` 口径相同）。

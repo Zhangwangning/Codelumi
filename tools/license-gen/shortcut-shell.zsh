@@ -1,6 +1,6 @@
 #!/bin/zsh
 # ============================================================================
-# Allude · 凭证签发 · 快捷指令专用 Shell 片段
+# Codelumi · 凭证签发 · 快捷指令专用 Shell 片段
 #
 # 用法：把本文件**全文**粘进 macOS 快捷指令的「运行 Shell 脚本」动作
 #       （解释器选 zsh；动作的「输入」接两行文本）。
@@ -16,7 +16,7 @@
 # 只依赖 macOS 自带：date / printf / base64 / tr / sed / openssl / python3
 # ============================================================================
 
-KEY="/Volumes/ZWN/Downloads/Project/Allude/tools/license-gen/private-key.pem"
+KEY="/Volumes/ZWN/Downloads/Project/Codelumi/tools/license-gen/private-key.pem"
 
 if [ ! -f "$KEY" ]; then
   print -- "ERR|找不到私钥：$KEY（外置卷没挂载？）"

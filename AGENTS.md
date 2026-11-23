@@ -7,15 +7,15 @@ SwiftUI + iOS 27 SDK，纯 Xcode 工程，零第三方依赖、零 SPM 包。
 > 界面文案（简中 / 繁中 / 英文）一律写 `Codelumi`；「珞米」只出现在两处：设置 › 关于页名字
 > 下方那一行、App Store 中文页。档位名是 `Codelumi Pro`。
 >
-> **技术标识符仍叫 `allude`，永远不改**：Bundle ID `com.jikezhang.allude`、App Group、
-> iCloud 容器 `iCloud.com.jikezhang.allude`、记录子目录 `Documents/`、小组件 kind
-> `AlludePickupWidget`、资源名（`AlludePickup.mlmodel`、`Allude.storekit`）、
-> 仓库与工程目录 `Allude/`、Swift 类型名（`AlludeApp`、`AlludeWidget`、`AboutAlludeView`、
-> `aboutAllude` 等）、UserDefaults 键 `allude.*`。
+> **技术标识符仍叫 `codelumi`，永远不改**：Bundle ID `com.jikezhang.codelumi`、App Group、
+> iCloud 容器 `iCloud.com.jikezhang.codelumi`、记录子目录 `Documents/`、小组件 kind
+> `CodelumiPickupWidget`、资源名（`CodelumiPickup.mlmodel`、`Codelumi.storekit`）、
+> 仓库与工程目录 `Codelumi/`、Swift 类型名（`CodelumiApp`、`CodelumiWidget`、`AboutCodelumiView`、
+> `aboutCodelumi` 等）、UserDefaults 键 `codelumi.*`。
 > 改了其中任何一个 → 老用户的数据容器换新 / 云端记录读不到 / 已加的桌面小组件失配。
 >
-> 更名链路：拾码 → Allude → **Codelumi**。版本历史里 0.x 那几条**保留 Allude 原名**（史实），
-> 1.0.0 那条写「拾码 → Allude → Codelumi（珞米）」。
+> 更名链路：拾码 → Codelumi → **Codelumi**。版本历史里 0.x 那几条**保留 Codelumi 原名**（史实），
+> 1.0.0 那条写「拾码 → Codelumi → Codelumi（珞米）」。
 
 > 🔴 **对外不表述收费（2026-11-21 主人定）**：隐私政策、使用条款、版本历史、App Store
 > 文案与支持页里**不出现价格、档位名（Codelumi Pro）、订阅 / 买断 / 恢复购买、iPadOS 适配**
@@ -26,20 +26,20 @@ SwiftUI + iOS 27 SDK，纯 Xcode 工程，零第三方依赖、零 SPM 包。
 
 | 商品 | Product ID | 定价 | 说明 |
 |---|---|---|---|
-| 每年 | `com.jikezhang.allude.pro.annual` | $1.99 / 年 | 自动续期订阅（⚠️ 不叫 `...yearly`：那个 ID 2026-11-11 被误建成非消耗型后删除，苹果永不复用） |
-| 终身 | `com.jikezhang.allude.pro.lifetime` | $9.99 | 非消耗型买断，**主推**（≈ 五年年费） |
+| 每年 | `com.jikezhang.codelumi.pro.annual` | $1.99 / 年 | 自动续期订阅（⚠️ 不叫 `...yearly`：那个 ID 2026-11-11 被误建成非消耗型后删除，苹果永不复用） |
+| 终身 | `com.jikezhang.codelumi.pro.lifetime` | $9.99 | 非消耗型买断，**主推**（≈ 五年年费） |
 
 `pro.monthly` 已从 App Store 下架，`PurchaseStore.Plan.monthly` 只为解码旧数据保留
 （`displayedPlans` 只有 `[.lifetime, .yearly]`）。走 StoreKit 2，价格一律取 `Product.displayPrice`。
 订阅会过期 → 权益快照必须写 `expiresAt`，否则小组件会一直按完整版渲染。
 
-> 隐私政策与使用条款有**三份副本要同步**：GitHub Pages（`Zhangwangning/allude-legal`，
-> App Store 表单填这个地址）、Gitee 镜像（`zhang_wangning/allude-legal`，国内可访问），
-> 以及 App 内打包的 `Allude/Legal/{privacy,terms}.html`（WKWebView 离线读，不跳浏览器）。
+> 隐私政策与使用条款有**三份副本要同步**：GitHub Pages（`Zhangwangning/codelumi-legal`，
+> App Store 表单填这个地址）、Gitee 镜像（`zhang_wangning/codelumi-legal`，国内可访问），
+> 以及 App 内打包的 `Codelumi/Legal/{privacy,terms}.html`（WKWebView 离线读，不跳浏览器）。
 > 改文档必须三处一起改，否则用户看到的和商店页面写的会不一致。
 
 > 托管地址：
-> 地址集中写在 `Allude/Models/LegalLinks.swift`。这三个 URL 已经要填进
+> 地址集中写在 `Codelumi/Models/LegalLinks.swift`。这三个 URL 已经要填进
 > App Store Connect 的审核表单 —— **不要改**，确需更换必须先让旧地址 301 过去。
 
 > ✅ **激活入口已于 2026-11-07 从设置页移除**（App Review 3.1.1）。
@@ -52,6 +52,16 @@ SwiftUI + iOS 27 SDK，纯 Xcode 工程，零第三方依赖、零 SPM 包。
 > 界面上已经没有粘贴凭证的入口，别再把它加回来（那是 App Store 3.1.1 的靶子）。
 
 ---
+
+## 命名与对外口径（2026-11-24 定）
+
+- 全项目**只有一个名字**：`Codelumi`（中文「珞米」）。目录、Xcode 工程、Target、
+  Scheme、Bundle ID、App Group、iCloud 容器、小组件扩展、仓库名全部是它。
+  旧名 `Allude` 只作为历史出现在更名链里，不再出现在任何标识符中。
+- 🔴 **任何地方都不提"借鉴 / 参考 / 竞品 / 抄"**：仓库 README、App 内文案、
+  代码注释、提交信息、TestFlight 文案一律不提别的 App 的功能或界面。
+- 对外定位固定这一句：**Codelumi 源自作者本人开源的「快递取件码」快捷指令项目，
+  是一款纯离线的取件码收集与管理工具，不需要联网，基于快捷指令自动化使用。**
 
 ## 硬规则（违反会出事故）
 
@@ -75,12 +85,12 @@ SwiftUI + iOS 27 SDK，纯 Xcode 工程，零第三方依赖、零 SPM 包。
 
 | 项 | 值 | 改了会怎样 |
 |---|---|---|
-| App Bundle ID | `com.jikezhang.allude` | 数据容器换新，用户记录全丢 |
-| Widget Bundle ID | `com.jikezhang.allude.AlludeWidget` | 系统判成新扩展，小组件需全部重加 |
-| App Group | `group.com.jikezhang.allude` | 主 App 与小组件的数据通道断 |
-| Widget `kind` | `AlludePickupWidget` | 已添加的桌面小组件失配 |
+| App Bundle ID | `com.jikezhang.codelumi` | 数据容器换新，用户记录全丢 |
+| Widget Bundle ID | `com.jikezhang.codelumi.CodelumiWidget` | 系统判成新扩展，小组件需全部重加 |
+| App Group | `group.com.jikezhang.codelumi` | 主 App 与小组件的数据通道断 |
+| Widget `kind` | `CodelumiPickupWidget` | 已添加的桌面小组件失配 |
 
-这些是用户看不见的内部标识。对外名称是「Allude」，对外显示名改 `CFBundleDisplayName` 即可。
+这些是用户看不见的内部标识。对外名称是「Codelumi」，对外显示名改 `CFBundleDisplayName` 即可。
 
 ### 3. 权益枚举只增不删
 
@@ -111,12 +121,12 @@ SwiftUI + iOS 27 SDK，纯 Xcode 工程，零第三方依赖、零 SPM 包。
 ## 路径结构（三层同名，别数错）
 
 ```
-Allude/                    ← 仓库根（.git 在这里）
-└── Allude/                ← 工程根
-    ├── Allude.xcodeproj
-    ├── Allude/            ← App 源码（Views / Models）
-    ├── AlludeShared/      ← App 与小组件共用的代码
-    ├── AlludeWidget/      ← 小组件扩展
+Codelumi/                    ← 仓库根（.git 在这里）
+└── Codelumi/                ← 工程根
+    ├── Codelumi.xcodeproj
+    ├── Codelumi/            ← App 源码（Views / Models）
+    ├── CodelumiShared/      ← App 与小组件共用的代码
+    ├── CodelumiWidget/      ← 小组件扩展
     ├── Config/               ← entitlements
     └── tools/
 ```
@@ -128,10 +138,10 @@ Allude/                    ← 仓库根（.git 在这里）
 ## 构建与运行
 
 ```bash
-cd Allude
-xcodebuild -project Allude.xcodeproj -scheme Allude \
+cd Codelumi
+xcodebuild -project Codelumi.xcodeproj -scheme Codelumi \
   -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath /tmp/allude-verify build \
+  -derivedDataPath /tmp/codelumi-verify build \
   CODE_SIGNING_ALLOWED=NO OTHER_SWIFT_FLAGS="-disable-sandbox"
 ```
 
@@ -148,7 +158,7 @@ xcodebuild -project Allude.xcodeproj -scheme Allude \
 （`-10004 权限违例`）。**所有面板类界面都靠 `SCREEN` 环境变量直渲**：
 
 ```bash
-xcrun simctl launch <UDID> com.jikezhang.allude   # 需先 SIMCTL_CHILD_SCREEN=xxx
+xcrun simctl launch <UDID> com.jikezhang.codelumi   # 需先 SIMCTL_CHILD_SCREEN=xxx
 xcrun simctl io <UDID> screenshot /tmp/x.png
 ```
 
@@ -162,9 +172,9 @@ xcrun simctl io <UDID> screenshot /tmp/x.png
 旧进程没死就 `launch`，会**静默沿用旧进程**——截到的是上一版界面，
 看起来像"改的代码没生效"。2026-10-31 因此误判过一次选中态。
 ```bash
-xcrun simctl terminate UDID com.jikezhang.allude; sleep 4
-xcrun simctl install UDID …/Allude.app; sleep 2
-xcrun simctl terminate UDID com.jikezhang.allude; sleep 4
+xcrun simctl terminate UDID com.jikezhang.codelumi; sleep 4
+xcrun simctl install UDID …/Codelumi.app; sleep 2
+xcrun simctl terminate UDID com.jikezhang.codelumi; sleep 4
 # 确认装上去的是新构建，再 launch + 截图
 ```
 
@@ -176,7 +186,7 @@ App 还在后台时，`simctl launch` 只把它**切回前台**，`SIMCTL_CHILD_
 —— 表现为"截图落到了列表页，脚手架像坏了一样"。实测探针：
 不加参数时 `SCREEN=nil`，加上后 `SCREEN=settings`。
 ```bash
-SIMCTL_CHILD_SCREEN=settings xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.allude
+SIMCTL_CHILD_SCREEN=settings xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.codelumi
 ```
 
 真机回归基准模拟器：iPhone 16 Pro `272DD31C-D94F-46B4-9CC7-974A61439777`。
@@ -218,40 +228,40 @@ iPhone 直板机已完工（0.3.3）；**iPhone Duo 折叠屏适配已开工**�
 第 2 套「取件袋」）。
 🔴 **编号与网格顺序严格一致（01…15 连续）**。重排会让老用户存的 `rawValue`
 指向另一张图（新旧 iconNN 同名不同图），所以 `AppIconStore` 里有一套
-**链式一次性迁移** `migrateLegacyNumberingIfNeeded()`：靠 `allude.appIcon.scheme`
+**链式一次性迁移** `migrateLegacyNumberingIfNeeded()`：靠 `codelumi.appIcon.scheme`
 版本标记（当前 `"3"`）+ 两张序号表（方案1→2、方案2→3）换算，冷启动时执行一次并同步系统图标。
 ⚠️ 以后再改编号，必须同步扩这两张序号表并升 `currentScheme`，否则老用户选择错位。
 **表里存的是序号不是 case 名** —— `icon09` 在三个方案里是三种不同的图，只有序号能跨版本对齐。
 设置 › 外观与个性化 › 自定义 App 图标可切换（版式同快递公司页的网格）。
 原主图标「取件袋」现在作为 alternate icon `Icon02` 保留，仍可在设置里选。
 
-- 主图标：`Allude/Assets.xcassets/AppIcon.appiconset`（1024，**不能有透明通道、不能自带圆角**）。
+- 主图标：`Codelumi/Assets.xcassets/AppIcon.appiconset`（1024，**不能有透明通道、不能自带圆角**）。
 - 🔴 **15 套 `AppIconNN.imageset`（App 内预览 / 灵动岛 / 关于页 / 分享卡共用）
-  统一放 `AlludeShared/Assets.xcassets`**（2026-11-15 从 App 的 catalog 迁过来）。
+  统一放 `CodelumiShared/Assets.xcassets`**（2026-11-15 从 App 的 catalog 迁过来）。
   理由：共享 catalog 被 App 与小组件**两个 target 各编译一次**，扩展进程才查得到；
   放在 App 的 catalog 里，小组件取不到图，`Image("AppIconNN")` 会**静默渲染成灰块**
   —— 1.0.0(312) 灵动岛不显示 App 图标就是这个原因。每份 imageset 必须带
   `"template-rendering-intent": "original"` + 1x(60)/2x(120)/3x(180) 三档。
 - 除默认那套（`Icon06` = 黑盒立体 = 主图标，不注册为 alternate）以外，全部由
-  **真实 `Allude/Info.plist`** 的 `CFBundleIcons › CFBundleAlternateIcons`
+  **真实 `Codelumi/Info.plist`** 的 `CFBundleIcons › CFBundleAlternateIcons`
   声明 `Icon01`…`Icon15` 中的 **14 条**（去掉 `Icon06`），文件是 bundle 根目录的
   `IconNN@2x.png`(120) / `@3x.png`(180)（纯 iPhone 工程，不需要 `~ipad`）。
   换默认图标也要同时动三处：`AppIcon.appiconset` 三张 1024、Info.plist 里新旧两条
   alternate 互换、`AppIconChoice.fallback`。新增一套要同时动三处：imageset、`AppIcons/IconNN*.png`、Info.plist 声明，
   再加 `AppIconChoice` 的 case、`number`、`title`（`assetName`/`alternateName` 由 `number` 自动拼）。
 - 🔴 **工程是 Xcode 16 同步文件夹**（`PBXFileSystemSynchronizedRootGroup`）：
-  `Allude/` 下新增 Swift 与 PNG 都**不用改 pbxproj**，自动进包。
+  `Codelumi/` 下新增 Swift 与 PNG 都**不用改 pbxproj**，自动进包。
 - ⚠️ `setAlternateIconName` 密集连切会被系统限流（模拟器 `LSIconAlertManager` Code=35
   "Resource temporarily unavailable"，真机表现为静默不生效）。验图标一次只切一个、间隔 20s 以上。
 - ⚠️ `simctl launch` 的脚手架环境变量必须写成 `SIMCTL_CHILD_SCREEN=x xcrun simctl launch …`，
   写在 bundle id 后面会被当成 argv 丢弃；真机对应 `DEVICECTL_CHILD_SCREEN=x`。
-  `AppIcons/` 与 `Allude/` 都在 Xcode 的同步组里，**不用改 pbxproj**。
+  `AppIcons/` 与 `Codelumi/` 都在 Xcode 的同步组里，**不用改 pbxproj**。
 - 图源自满幅方图，**不再裁切**（早期那批是白底圆角，裁过角）。
   ⚠️ `sips -z` 只改尺寸、**不改格式**：源是 JPEG 时要显式加 `-s format png`，
   否则 `.png` 文件里装的是 JPEG 数据。
   ⚠️ 工程已改为 `GENERATE_INFOPLIST_FILE = NO` + `INFOPLIST_FILE = Info.plist`，
   增删 Info.plist 键要改那个真实文件，`INFOPLIST_KEY_*` 不再生效。
-- 选择状态存 **App Group**（`allude.appIcon`），但 🔴 **灵动岛/锁屏不靠它**：
+- 选择状态存 **App Group**（`codelumi.appIcon`），但 🔴 **灵动岛/锁屏不靠它**：
   选择随 `ContentState.appIconRaw` 过进程边界（2026-11-15 修）。扩展进程自己读
   共享偏好域那条链一断就回落到默认图标（第 6 套黑盒立体），表现为「桌面换了、岛里还是旧图标」。
 - `AppMarkIcon(choice:)`（灵动岛/锁屏）、关于页顶部、设置网格读同一份选择。
@@ -277,7 +287,7 @@ iPhone 直板机已完工（0.3.3）；**iPhone Duo 折叠屏适配已开工**�
 
 App 内「关于 › 声明与免责」（`StatementView`）是唯一的对外表述来源，四段：
 
-1. **来源**：Allude 由极客ZHANG 独立开发，衍生自开发者本人制作的
+1. **来源**：Codelumi 由极客ZHANG 独立开发，衍生自开发者本人制作的
    「快递取件码」快捷指令；App 把那套取码逻辑搬进原生应用，没有第二个来源。
 2. **技术**：全部 Apple 官方工具与框架（Xcode / Swift / SwiftUI / WidgetKit /
    ActivityKit / StoreKit），零第三方依赖、零第三方 SDK。
@@ -391,7 +401,7 @@ App 内「关于 › 声明与免责」（`StatementView`）是唯一的对外�
 主人要求：**只改 iPhone Duo 外屏**的灵动岛，不要动其他设备。
 
 - 判断收在 `DuoOuterDisplay.isActive`：主 App 启动时按 **窗口高度 < 720pt**
-  判定并写进 App Group（`allude.duoOuter`），灵动岛由小组件进程渲染，读同一份。
+  判定并写进 App Group（`codelumi.duoOuter`），灵动岛由小组件进程渲染，读同一份。
   ⚠️ 不能靠 `UIScreen.main`（已弃用）或 `horizontalSizeClass`（直板机也是 compact）。
 - Duo 外屏：只剩数字、居中、>99 显示 `99+`；
   直板机：保持「待取 N」横排（原口径 2026-09-22 定调，别动）。
@@ -511,8 +521,8 @@ App 内「关于 › 声明与免责」（`StatementView`）是唯一的对外�
 
 | 档位 | 对外名称 |
 |---|---|
-| 未解锁 | **Allude** |
-| 已解锁 | **Allude Pro**（完整名 Allude Pro） |
+| 未解锁 | **Codelumi** |
+| 已解锁 | **Codelumi Pro**（完整名 Codelumi Pro） |
 
 小组件头部空间窄，截断提示用最短的「Pro」（配锁图标），不再写「免费版」。
 
@@ -544,7 +554,7 @@ WidgetKit 也不暴露实例数量，说不清就别写。
 
 `DiagnosticsLog` 在 `Application Support/Diagnostics/log.txt` 滚动记录（上限 256 KB，
 超过滚成 `log.1.txt`，只留一代）。用户点「反馈 › 发送邮件反馈」时，日志作为
-`allude-log.txt` **附件**随邮件发出（走 `MFMailComposeViewController`，
+`codelumi-log.txt` **附件**随邮件发出（走 `MFMailComposeViewController`，
 `mailto:` 带不了附件）；用户可关闭「附带诊断日志」开关。
 
 🔴 **日志绝不记录用户内容**：不写短信原文、取件码、地址、电话、设备 UUID。
@@ -585,7 +595,7 @@ WidgetKit 也不暴露实例数量，说不清就别写。
 # 短信解析回归 —— **必须传语料路径**，省略会直接报「读不到语料文件」并 exit 1。
 # 精选库（64 条，基线：识别 64 / 地址 60），语料在**仓库外**，换机器可能不存在
 swiftc -O -o /tmp/parser-regression \
-  Allude/Allude/Models/PickupParser.swift \
+  Codelumi/Codelumi/Models/PickupParser.swift \
   tools/parser-regression/main.swift && \
 /tmp/parser-regression "/Volumes/ZWN/Downloads/Project/shortcuts-toolkit-master/快递取件码短信库.md"
 
@@ -599,9 +609,9 @@ swiftc -O -o /tmp/parser-regression \
 # （Image(uiImage:)、.widgetAccentedRenderingMode）与 BrandDebug 的 App Group 依赖
 # 在 macOS 目标下编不过，垫片只补最小定义、不改匹配逻辑。
 swiftc -O -o /tmp/station-check \
-  "$PWD/Allude/AlludeShared/CourierBrand.swift" \
-  "$PWD/Allude/AlludeShared/BrandPalette.swift" \
-  "$PWD/Allude/AlludeShared/Localization.swift" \
+  "$PWD/Codelumi/CodelumiShared/CourierBrand.swift" \
+  "$PWD/Codelumi/CodelumiShared/BrandPalette.swift" \
+  "$PWD/Codelumi/CodelumiShared/Localization.swift" \
   "$PWD/tools/swift-cli-shim.swift" \
   "$PWD/tools/station-check/main.swift" && /tmp/station-check
 # 退出码 0 = 全符合基线；1 = 有差异并逐条打印。
@@ -612,9 +622,9 @@ swiftc -O -o /tmp/station-check \
 
 # 品牌表 + 资源落盘自检（必须用绝对路径编译，它靠 #filePath 推仓库根）
 swiftc -O -o /tmp/brand-check \
-  "$PWD/Allude/AlludeShared/CourierBrand.swift" \
-  "$PWD/Allude/AlludeShared/BrandPalette.swift" \
-  "$PWD/Allude/AlludeShared/Localization.swift" \
+  "$PWD/Codelumi/CodelumiShared/CourierBrand.swift" \
+  "$PWD/Codelumi/CodelumiShared/BrandPalette.swift" \
+  "$PWD/Codelumi/CodelumiShared/Localization.swift" \
   "$PWD/tools/swift-cli-shim.swift" \
   "$PWD/tools/brand-check/main.swift" && /tmp/brand-check
 # 这条目前会 exit 1。2 项失败是**既有业务差异**，不是回归，别去「修」：
@@ -681,7 +691,7 @@ python3 tools/license-gen/issue-openssl.py --check "<凭证>"
    🔴 SwiftUI 不会因为 static 变量变了就重算 body，根视图用 `.id(generation)` 强制重建。
    「跟随系统」把 `DynamicTypeSize` 映射成同一量级倍率（0.88…1.62）。
 3. **语言**：不在 App 内做切换。点行 → `UIApplication.openSettingsURLString`
-   跳到 设置 › App › Allude › 语言。界面显示「简体中文」。
+   跳到 设置 › App › Codelumi › 语言。界面显示「简体中文」。
    注：系统里那条语言项只有当 App 带多个本地化时才有可选项；当前只有简体中文，
    所以入口是"能到那儿"，暂时没有可切换项。
 
@@ -694,20 +704,20 @@ python3 tools/license-gen/issue-openssl.py --check "<凭证>"
 
 做法（自动化，非人工润色）：
 
-- 文案表：`Allude/Allude/zh-Hant.lproj/Localizable.strings`（App）
-  与 `Allude/AlludeWidget/zh-Hant.lproj/Localizable.strings`（小组件）。
+- 文案表：`Codelumi/Codelumi/zh-Hant.lproj/Localizable.strings`（App）
+  与 `Codelumi/CodelumiWidget/zh-Hant.lproj/Localizable.strings`（小组件）。
   **键 = 简体原文，值 = 繁体**。来源脚本：扫全部 Swift 里不带 `\(` 插值的中文字面量，
   用 `StringTransform("Hans-Hant")` 转换，再过一张术语表
   （設置→設定、短信→簡訊、默認→預設、保存→儲存、文件→檔案、信息→訊息、網絡→網路…）。
   当前 789 条映射 / 913 条候选 ≈ 86%。
 - `Info.plist` 增加 `CFBundleLocalizations = [zh-Hans, zh-Hant]`，
-  系统「设置 › App › Allude › 语言」里才会出现两个选项。
+  系统「设置 › App › Codelumi › 语言」里才会出现两个选项。
 
 🔴 **坑：`Text(String)` 不查表**。`Text("字面量")` 会用 `LocalizedStringKey` 查表，
 但我们的标题/详情/卡片多是**动态 String**（枚举、模型），必须显式 `x.L`。
 目前已经接上的：`SettingsRow`（title/subtitle/detail）、`SectionHeader`。
 其余页面里的动态字符串仍是简体 —— 要扩覆盖就在处加 `.L`（helper 在
-`AlludeShared/Localization.swift`）。
+`CodelumiShared/Localization.swift`）。
 
 🔴 业务数据**不能进表**：快递公司名、驿站名、解析正则、OCR 关键词。
 生成脚本已跳过 `PickupParser.swift` / `CourierBrand.swift` / `BrandPalette.swift` / `PickupAICheck.swift`。
@@ -717,7 +727,7 @@ python3 tools/license-gen/issue-openssl.py --check "<凭证>"
 
 ## 快捷指令自动化（2026-11-05）
 
-设置 › 快捷指令自动化：把「收到短信 → 添加到Allude」的自动化导进系统。
+设置 › 快捷指令自动化：把「收到短信 → 添加到Codelumi」的自动化导进系统。
 
 🔴 **一键添加（iCloud 链接 / 文件导入）只在 iOS 27 及以上可用**（2026-11-11 主人定）。
 iOS 26 及更早的系统不支持导入带触发器的自动化 → 引导页与设置页按
@@ -734,7 +744,7 @@ iOS 26 及更早的系统不支持导入带触发器的自动化 → 引导页�
 - **`WFWorkflowImportQuestions` 对触发器不生效**（B1/B2 两种 Category 都试过，
   能添加但不弹输入框）→ 自定义关键词这条路关闭，只能预定几个词。
 - `shortcuts sign` 会**剥掉 `WFWorkflowName`** → 导入后的名称只能靠**文件名**，
-  所以文件名必须是「Allude 取件码解析「关键词」.shortcut」。
+  所以文件名必须是「Codelumi 取件码解析「关键词」.shortcut」。
 - 🔴 生成脚本要**同时**写名称、关键词、UUID：2026-11-05 曾漏了关键词赋值，
   四个文件全是「【」，导致主人分享出去的三条链接全是错的（下载回来验过才发现）。
 - 🔴 **动作参数的输入绑定不要写死成「触发器输出」**：2026-11-10 那批 wflow 里
@@ -753,9 +763,9 @@ iOS 26 及更早的系统不支持导入带触发器的自动化 → 引导页�
 理由：每多一条自动化就多一条系统「自动化已运行」通知，而 **iOS 27.2 起这条通知
 已无法关闭**（此前可在「设置 › 屏幕时间」里关），所以默认只推一条。
 
-**iCloud 链接（2026-11-10 已换新）**：改名成 Allude 后，4 个 `.shortcut` 资源已全部拆包、
+**iCloud 链接（2026-11-10 已换新）**：改名成 Codelumi 后，4 个 `.shortcut` 资源已全部拆包、
 把 App Intent 的 bundle id / 名称 / Team 改掉，并用 `shortcuts sign -m anyone` 重新签名
-（`Allude/Allude/Resources/Automations/`）。主人用快捷指令 App 重新分享后，
+（`Codelumi/Codelumi/Resources/Automations/`）。主人用快捷指令 App 重新分享后，
 `ShortcutAutomation.icloudLinks` 里的 4 条已全部回填为新包链接（均验证 HTTP 200 可下载）。
 ⚠️ 旧包（含 `com.jikezhang.codeclip`）的 4 条链接已作废，别再把它们填回去；
 以后换 bundle id 或改动作定义，这 4 条必须重新分享。
@@ -939,13 +949,13 @@ bash tools/unslop-audit.sh --json     # 机器可读
 | **iPhone Duo** | **iOS 27+ 即可** | 🔴 它出厂系统就是 iOS 27，**不必适配 iOS 26 以下**；Duo 专属代码可直接用 iOS 26/27 API |
 
 **iOS 17/18 兼容做法（2026-11-11）**：`widgetAccentedRenderingMode`（iOS 18）已收进
-`Allude/AlludeShared/GlassCompat.swift` 的 `Image.widgetAccentedFullColor()`（低版本原样返回）。
+`Codelumi/CodelumiShared/GlassCompat.swift` 的 `Image.widgetAccentedFullColor()`（低版本原样返回）。
 ⚠️ `@Parameter` 的两个初始化参数要分清版本：
 `inputConnectionBehavior` / `inputOptions` 属于 **`String` 参数、iOS 16.0 起**（可放心用，
 2026-11-11 曾误判成 iOS 18 删掉，已恢复）；`supportedContentTypes` 只属于
 `FileEntity`（iOS 18），`IntentFile` 参数没有这个参数，别再去找。
 `IntentModes`（含 `.background`）是 iOS 26，部署目标 17 统一改用 `openAppWhenRun = false`。
-🔴 `AlludeShared` 在工程里是**显式 PBXGroup**（不是同步组）：新增文件必须手动加进
+🔴 `CodelumiShared` 在工程里是**显式 PBXGroup**（不是同步组）：新增文件必须手动加进
 project.pbxproj 才会参与编译，否则报「value of type ... has no member」。
 
 **iOS 18 实测记录（2026-11-08，iOS 18.2 模拟器 iPhone 16 Pro）**：
@@ -961,7 +971,7 @@ Apple 智能页显示低版本说明页。发现并修掉一处：`appGlass()` �
 
 液态玻璃的处理：
 
-- `.glassEffect` 是 iOS 26 新增，**所有调用必须走 `appGlass()`**（`AlludeShared/GlassCompat.swift`）：
+- `.glassEffect` 是 iOS 26 新增，**所有调用必须走 `appGlass()`**（`CodelumiShared/GlassCompat.swift`）：
   系统 ≥26 且用户开关打开 → 真液态玻璃；否则 → 系统毛玻璃 `.ultraThinMaterial` + 0.5pt 描边。
 - 设置 › 外观 ›「液态玻璃」开关（仅 iOS 26+ 显示）控制是否启用，界面改动重启生效。
 - 其它已处理的低版本 API：`tabBarMinimizeBehavior`（modifier 收起）、
@@ -990,7 +1000,7 @@ Apple 智能页显示低版本说明页。发现并修掉一处：`appGlass()` �
 陇ICP备2026011130号       审核通过 2026-11-06
 ```
 
-- 🔴 **App 内不显示备案号**（2026-11-07 主人定）：Allude是无服务器、不联网的单机 App，
+- 🔴 **App 内不显示备案号**（2026-11-07 主人定）：Codelumi是无服务器、不联网的单机 App，
   唯一网络行为是 StoreKit（仅连 Apple），按官方口径「单机不联网的 App 无需备案」，
   走苹果豁免即可 —— 因此 `PageFooter` 只显示版本号。网站备案号仍留在开发者网站。
 - 🔴 **网站备案 ≠ App 备案**：这次通过的是**网站/域名**备案（GitHub Pages、Gitee 镜像等
@@ -1009,7 +1019,7 @@ Apple **不会**把新构建自动挂到「外部测试」群组（内部测试�
   --notes-file tools/testflight-notes/1.0.0-239.md
 ```
 
-- 脚本做三件事（都可重复执行）：挂进外部群组「Allude公测」→ 写简体中文「测试内容」→
+- 脚本做三件事（都可重复执行）：挂进外部群组「Codelumi公测」→ 写简体中文「测试内容」→
   提交 Beta App 审核（已 APPROVED / 等待审核 / 审核中会跳过）。
 - 凭据：`~/.appstoreconnect/private_keys/AuthKey_34Z43R5SGY.p8`（Key ID `34Z43R5SGY`、
   Issuer `e2936bfc-e52b-4931-a763-9f03dec868e3`，可用 `ASC_KEY_ID` / `ASC_ISSUER_ID` /
@@ -1018,7 +1028,7 @@ Apple **不会**把新构建自动挂到「外部测试」群组（内部测试�
   3.14 会报 `CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate`。
 - 测试内容写「本版实际改了什么 + 测试重点 + 需要哪些设备验证」，**不要写「解决了一些已知问题」**
   （2026-11-11 主人明确要求）。每版一个文件放在 `tools/testflight-notes/1.0.0-<构建号>.md`，
-  和 `Allude/Allude/Views/VersionHistoryView.swift` 的版本条目同源、不要互相矛盾。
+  和 `Codelumi/Codelumi/Views/VersionHistoryView.swift` 的版本条目同源、不要互相矛盾。
 - 本机同时装了 `bsk` 浏览器工具链（`~/.local/bin/bsk`）：API 不可用时可借用户 Chrome 的
   已登录 ASC 页面兜底操作（`bsk session start` → `bsk tab borrow` → `bsk cooperate sync` →
   `bsk click/fill` → `bsk tab return` → `bsk session stop`）。
@@ -1027,7 +1037,7 @@ Apple **不会**把新构建自动挂到「外部测试」群组（内部测试�
 
 可选功能，**默认关闭**。关着的时候 App 一个字节都不碰 iCloud。
 
-- **只走用户自己的 iCloud**（iCloud Drive 里的 `Documents/Allude/records.json`），
+- **只走用户自己的 iCloud**（iCloud Drive 里的 `Documents/Codelumi/records.json`），
   不经过开发者服务器、不建账号；Apple 的隐私标签仍是「不收集数据」。
 - **合并粒度是单条记录**：同 `id` 取 `updatedAt` 新的那份（老记录没有 `updatedAt`
   时回落 `receivedAt`）；删除用**墓碑**（`pickup-sync-tombstones.json`，90 天 TTL），
@@ -1045,18 +1055,18 @@ Apple **不会**把新构建自动挂到「外部测试」群组（内部测试�
   ```
   SIMCTL_CHILD_ALLUDE_SYNC_ENABLED=1 \
   SIMCTL_CHILD_ALLUDE_SYNC_REMOTE=/tmp/sync-test \
-  xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.allude
+  xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.codelumi
   ```
   两个模拟器指同一个目录就等于「两台设备」。验证点：远端改一条 → App 变已取；
   远端加墓碑 → 记录消失；连续启动两次 `records.json` 的 md5 不变（幂等）。
-- ⚠️ **签名前置**：`Allude/Config/Allude.entitlements` 有
-  `com.apple.developer.ubiquity-container-identifiers = iCloud.com.jikezhang.allude`，
-  `Allude/Info.plist` 有 `NSUbiquitousContainers`；但**开发者账号里这个 App ID 还没开 iCloud 能力**，
+- ⚠️ **签名前置**：`Codelumi/Config/Codelumi.entitlements` 有
+  `com.apple.developer.ubiquity-container-identifiers = iCloud.com.jikezhang.codelumi`，
+  `Codelumi/Info.plist` 有 `NSUbiquitousContainers`；但**开发者账号里这个 App ID 还没开 iCloud 能力**，
   `xcodebuild archive` 会报「Provisioning profile doesn't match the entitlements file's value for
   com.apple.developer.ubiquity-container-identifiers」。需要在 Xcode › Signing & Capabilities
-  里给 Allude target 加 iCloud（勾 iCloud Documents，容器 `iCloud.com.jikezhang.allude`），
+  里给 Codelumi target 加 iCloud（勾 iCloud Documents，容器 `iCloud.com.jikezhang.codelumi`），
   或在开发者门户里给 App ID 打开 iCloud 并建容器，之后 `-allowProvisioningUpdates` 才能过。
-- 法务三处已同步（App 内 HTML、GitHub `allude-legal`、Gitee 镜像）：隐私政策新增
+- 法务三处已同步（App 内 HTML、GitHub `codelumi-legal`、Gitee 镜像）：隐私政策新增
   「6. iCloud 同步（可选，默认关闭）」，使用条款新增「4A. iCloud 同步」，
   页脚/同意页改成「默认只在本机，开启 iCloud 同步后也只在你自己的 iCloud 里」。
 
@@ -1065,4 +1075,4 @@ Apple **不会**把新构建自动挂到「外部测试」群组（内部测试�
 署名 `极客ZHANG <zhang_wangning@126.com>`。提交信息用中文，
 前缀 `feat:` / `fix:` / `refactor:` / `style:` / `docs:` / `chore:`。
 
-远端：`https://github.com/Zhangwangning/Allude`（私有）。
+远端：`https://github.com/Zhangwangning/Codelumi`（私有）。

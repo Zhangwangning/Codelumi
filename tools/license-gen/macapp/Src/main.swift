@@ -19,7 +19,7 @@ let ccDebugON: Bool = {
 
 func ccLog(_ message: String) {
     guard ccDebugON else { return }
-    let line = "[allude-issuer] \(message)\n"
+    let line = "[codelumi-issuer] \(message)\n"
     FileHandle.standardError.write(line.data(using: .utf8)!)
     let file = "/tmp/cc-issuer-debug.log"
     if let handle = FileHandle(forWritingAtPath: file) {
@@ -45,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupPopover()
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(openMainWindow),
-                                               name: .alludeOpenMainWindow,
+                                               name: .codelumiOpenMainWindow,
                                                object: nil)
         // 延后到 run loop 下一轮再建窗：`open` 启动路径下，此刻立即 showWindow
         // 会因前台权限尚未就绪而窗口不上屏（实测直接执行二进制却正常）
@@ -80,11 +80,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            let image = NSImage(systemSymbolName: "signature", accessibilityDescription: "Allude 发码")
+            let image = NSImage(systemSymbolName: "signature", accessibilityDescription: "Codelumi 发码")
             image?.isTemplate = true
             button.image = image
             button.image?.size = NSSize(width: 17, height: 17)
-            button.toolTip = "Allude · 发码工具"
+            button.toolTip = "Codelumi · 发码工具"
             button.target = self
             button.action = #selector(statusButtonClicked)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])

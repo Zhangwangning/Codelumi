@@ -7,7 +7,7 @@
 #   tools/profile-expiry.sh path/to/X.ipa       # 查 ipa
 set -uo pipefail
 
-TARGET="${1:-/tmp/allude-device/Build/Products/Debug-iphoneos/Allude.app}"
+TARGET="${1:-/tmp/codelumi-device/Build/Products/Debug-iphoneos/Codelumi.app}"
 
 if [[ ! -e "$TARGET" ]]; then
   echo "✗ 找不到 $TARGET（先跑一次 tools/install-device.sh）" >&2

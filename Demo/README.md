@@ -1,8 +1,8 @@
 # CodeClip iOS —— UI Demo 说明
 
 > ⚠️ **历史文档（2026-09-20）**：这里记录的是立项期的 **CodeClip UI Demo**（独立工程，已不在本仓库维护）。
-> 产品于 2026-11-10 更名为 **Allude**；下文路径、模块名保留当时写法，仅作历史记录，
-> 请勿据此查找当前工程文件。当前工程见 `Allude/Allude.xcodeproj`。
+> 产品于 2026-11-10 更名为 **Codelumi**；下文路径、模块名保留当时写法，仅作历史记录，
+> 请勿据此查找当前工程文件。当前工程见 `Codelumi/Codelumi.xcodeproj`。
 
 
 > 版本：0.1.0 (Demo) · 构建目标：iOS 27.0 · 设备：iPhone 17 Pro 模拟器

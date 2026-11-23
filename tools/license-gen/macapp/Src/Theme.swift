@@ -4,9 +4,9 @@ import AppKit
 
 extension Notification.Name {
     /// 面板里的「打开主窗口」按钮用
-    static let alludeOpenMainWindow = Notification.Name("alludeOpenMainWindow")
+    static let codelumiOpenMainWindow = Notification.Name("codelumiOpenMainWindow")
     /// 签发成功后通知台账页刷新
-    static let alludeLedgerChanged = Notification.Name("alludeLedgerChanged")
+    static let codelumiLedgerChanged = Notification.Name("codelumiLedgerChanged")
 }
 
 // ============================================================================

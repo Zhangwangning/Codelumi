@@ -13,12 +13,14 @@
 | 名称 | Codelumi / 珞米（1.0.0，构建 325） |
 | 平台 | iOS 17 及以上（iPhone；iPhone Duo 折叠屏另做适配） |
 | 工程 | 纯 Xcode 工程，SwiftUI，无 SPM 包、无第三方库 |
-| 结构 | 仓库根 `Allude/` → 工程根 `Allude/` → `Allude/`（App 源码）、`AlludeShared/`（App 与小组件共用）、`AlludeWidget/`（小组件扩展） |
+| 结构 | 仓库根 `Codelumi/` → 工程根 `Codelumi/` → `Codelumi/`（App 源码）、`CodelumiShared/`（App 与小组件共用）、`CodelumiWidget/`（小组件扩展） |
 | 状态 | 已上 TestFlight 内测，App Store 版本在审核流程中 |
 
 对外名称是 **Codelumi**（中文名「珞米」，只在关于页与商店中文页出现一次）。
 
-Bundle ID、App Group、iCloud 容器、小组件 kind、仓库目录这类内部标识仍叫 `allude`，从第一版起没改过 —— 改了用户的数据容器就会换新，老记录直接读不到。更名链路：拾码 → Allude → Codelumi。
+Bundle ID、App Group、iCloud 容器、小组件扩展、仓库与工程目录已全部统一为 `codelumi` / `Codelumi`。更名链路：拾码（快捷指令）→ Allude（早期构建的工程代号）→ Codelumi（正式名）。
+
+Codelumi 是一个独立、纯离线的工具。功能来自作者本人的开源快捷指令项目与日常取件流程，不取用任何其他 App 的功能或界面。
 
 ## 创意来源：先有一个快捷指令
 
@@ -38,7 +40,7 @@ Bundle ID、App Group、iCloud 容器、小组件 kind、仓库目录这类内�
 
 这些反馈说明一件事：**基于短信的取件码收集是真实需求**，不是凭空想出来的功能。但快捷指令有天花板：没有列表与搜索，没有分组与排序，没有提醒与小组件，每跑一次多一条「自动化已运行」通知，正则改起来也只能在一个动作里硬编码。
 
-所以把那套解析规则整体搬进原生 App，做成了 Allude。仓库里仍然留着那个快捷指令的项目与语料，App 的解析规则至今和它同源——四条正则、优先级链、字段口径都从那里长出来，然后在真机语料上一条条补齐。
+所以把那套解析规则整体搬进原生 App，做成了 Codelumi。仓库里仍然留着那个快捷指令的项目与语料，App 的解析规则至今和它同源——四条正则、优先级链、字段口径都从那里长出来，然后在真机语料上一条条补齐。
 
 ## 它做什么
 
@@ -54,7 +56,7 @@ Bundle ID、App Group、iCloud 容器、小组件 kind、仓库目录这类内�
 
 三条路，用户自己选：
 
-- iOS 27 起可以在设置里一键导入「收到短信 → 添加到 Allude」的自动化（更早的系统按教程手动建一条）
+- iOS 27 起可以在设置里一键导入「收到短信 → 添加到 Codelumi」的自动化（更早的系统按教程手动建一条）
 - 截图收件：相册或截图里选一张，识别文字
 - 手动粘贴：把整条短信复制进来
 
@@ -74,7 +76,7 @@ Bundle ID、App Group、iCloud 容器、小组件 kind、仓库目录这类内�
 
 本机 `Application Support` 里的 JSON。记录有上限，超了按先进先出淘汰最旧的——这只在收到新短信入库时触发，启动不会删东西。
 
-可以选择开启 iCloud 同步：写进**你自己的** iCloud 云盘（`Documents/Allude/records.json`），不经过开发者服务器。合并粒度是单条记录，同一个 id 取更新时间新的那份；删除会留墓碑，免得另一台设备把删掉的记录同步回来。
+可以选择开启 iCloud 同步：写进**你自己的** iCloud 云盘（`Documents/Codelumi/records.json`），不经过开发者服务器。合并粒度是单条记录，同一个 id 取更新时间新的那份；删除会留墓碑，免得另一台设备把删掉的记录同步回来。
 
 **5. 端侧智能只做补位**
 
@@ -88,7 +90,7 @@ Bundle ID、App Group、iCloud 容器、小组件 kind、仓库目录这类内�
 - 代码里没有发起网络请求的地方。可以自查：
 
 ```bash
-grep -rn "URLSession\|URLRequest\|NSURLConnection" Allude/Allude Allude/AlludeShared Allude/AlludeWidget
+grep -rn "URLSession\|URLRequest\|NSURLConnection" Codelumi/Codelumi Codelumi/CodelumiShared Codelumi/CodelumiWidget
 # 无输出
 ```
 
@@ -99,10 +101,10 @@ grep -rn "URLSession\|URLRequest\|NSURLConnection" Allude/Allude Allude/AlludeSh
 ## 怎么编
 
 ```bash
-cd Allude
-xcodebuild -project Allude.xcodeproj -scheme Allude \
+cd Codelumi
+xcodebuild -project Codelumi.xcodeproj -scheme Codelumi \
   -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath /tmp/allude-verify build \
+  -derivedDataPath /tmp/codelumi-verify build \
   CODE_SIGNING_ALLOWED=NO OTHER_SWIFT_FLAGS="-disable-sandbox"
 ```
 
@@ -126,7 +128,7 @@ xcodebuild -project Allude.xcodeproj -scheme Allude \
 
 ```bash
 swiftc -O -o /tmp/parser-regression \
-  Allude/Allude/Models/PickupParser.swift tools/parser-regression/main.swift && \
+  Codelumi/Codelumi/Models/PickupParser.swift tools/parser-regression/main.swift && \
 /tmp/parser-regression 短信语料库_v1.md
 # 当前基线：识别 193/514、地址 192/514
 ```

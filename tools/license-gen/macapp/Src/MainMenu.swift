@@ -71,7 +71,7 @@ enum MainMenu {
         let item = NSMenuItem(title: appName, action: nil, keyEquivalent: "")
         let menu = NSMenu(title: appName)
 
-        menu.addItem(withTitle: "关于「Allude 发码」",
+        menu.addItem(withTitle: "关于「Codelumi 发码」",
                      action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
                      keyEquivalent: "").target = NSApp
         menu.addItem(.separator())

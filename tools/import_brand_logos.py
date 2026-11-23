@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Allude · 品牌图标导入器
+Codelumi · 品牌图标导入器
 ================================
 
 把各家快递 / 驿站 / 商家的官方方形图标导进 Asset Catalog，供 `CourierLogo` 使用。
@@ -45,7 +45,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
-ASSETS = os.path.join(ROOT, "Allude", "Allude", "Assets.xcassets")
+ASSETS = os.path.join(ROOT, "Codelumi", "Codelumi", "Assets.xcassets")
 BRANDS_DIR = os.path.join(ASSETS, "Brands")
 SOURCE_ARCHIVE = os.path.join(HERE, "brand-source")
 

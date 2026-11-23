@@ -9,25 +9,25 @@
 ## 0. 五分钟上手
 
 ```bash
-cd /Volumes/ZWN/Downloads/Project/Allude/Allude
-mv Allude/Resources/AlludePickup.mlmodel Allude/Resources/AlludePickup.mlmodel.bak
-xcodebuild -project Allude.xcodeproj -scheme Allude \
-  -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/allude-verify build \
+cd /Volumes/ZWN/Downloads/Project/Codelumi/Codelumi
+mv Codelumi/Resources/CodelumiPickup.mlmodel Codelumi/Resources/CodelumiPickup.mlmodel.bak
+xcodebuild -project Codelumi.xcodeproj -scheme Codelumi \
+  -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/codelumi-verify build \
   CODE_SIGNING_ALLOWED=NO OTHER_SWIFT_FLAGS="-disable-sandbox"
-mv Allude/Resources/AlludePickup.mlmodel.bak Allude/Resources/AlludePickup.mlmodel
+mv Codelumi/Resources/CodelumiPickup.mlmodel.bak Codelumi/Resources/CodelumiPickup.mlmodel
 ```
 
 界面验收一律走脚手架，**命令行点不了屏幕**（没 idb，AppleScript 被辅助功能权限拒）：
 
 ```bash
-xcrun simctl install <UDID> /tmp/allude-verify/Build/Products/Debug-iphonesimulator/Allude.app
-SIMCTL_CHILD_SCREEN=notify xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.allude
+xcrun simctl install <UDID> /tmp/codelumi-verify/Build/Products/Debug-iphonesimulator/Codelumi.app
+SIMCTL_CHILD_SCREEN=notify xcrun simctl launch --terminate-running-process <UDID> com.jikezhang.codelumi
 sleep 7 && xcrun simctl io <UDID> screenshot /tmp/x.png
 ```
 
 常用 `SCREEN`：`widgetSettings` / `widgetPreset`（配 `WIDGET_PRESET=<kind>`）/ `notify` /
 `appearance` / `appearanceGroup` / `about` / `openSource` / `aiCapability` / `settings` /
-`add`（配 `SEED`）/ `notify`。更多见 `AlludeApp.swift` 的 `switch environment["SCREEN"]`。
+`add`（配 `SEED`）/ `notify`。更多见 `CodelumiApp.swift` 的 `switch environment["SCREEN"]`。
 
 ---
 
@@ -36,11 +36,11 @@ sleep 7 && xcrun simctl io <UDID> screenshot /tmp/x.png
 | 症状 | 根因 | 对策 |
 |---|---|---|
 | 一堆假错：`'self' is immutable`、`StateMacro could not be found` | 构建进程被沙箱包住，宏插件子进程起不来 | 加 `OTHER_SWIFT_FLAGS="-disable-sandbox"`。**这是工具链问题，不要改业务代码去迎合** |
-| `sandbox-exec: sandbox_apply: Operation not permitted`（coremlc） | Xcode 硬编码包了 CoreML 编译步骤 | 临时 `mv` 掉 `AlludePickup.mlmodel` 再构建，完了还原。`ENABLE_USER_SCRIPT_SANDBOXING=NO` 无效 |
+| `sandbox-exec: sandbox_apply: Operation not permitted`（coremlc） | Xcode 硬编码包了 CoreML 编译步骤 | 临时 `mv` 掉 `CodelumiPickup.mlmodel` 再构建，完了还原。`ENABLE_USER_SCRIPT_SANDBOXING=NO` 无效 |
 | 改了代码，截图却还是旧界面 | `simctl install` / `terminate` 是异步的，旧进程没死就 launch | 必须 `launch --terminate-running-process`；先 terminate → 等 4s → install → 再 terminate → 再 launch |
 | 启动后白屏（前 3 秒） | 冷启动未完成 | 睡 6–8 秒再截，别急着判"崩了" |
 | 改 App Group plist 不生效 | 模拟器 `cfprefsd` 缓存该域 | `simctl spawn <udid> killall -9 cfprefsd`，或关机重启模拟器 |
-| 行为依赖某个开关，但模拟器上开关点不动 | 非 Pro 时 `gatedToggle` 用 `.constant(false)` 强制关，**UI 关但 model 值仍可读** | 取证用 `simctl spawn <udid> defaults write com.jikezhang.allude <key> -bool YES` |
+| 行为依赖某个开关，但模拟器上开关点不动 | 非 Pro 时 `gatedToggle` 用 `.constant(false)` 强制关，**UI 关但 model 值仍可读** | 取证用 `simctl spawn <udid> defaults write com.jikezhang.codelumi <key> -bool YES` |
 | 改 `project.pbxproj` 后文件变 0 字节 | 内联读写截断 | 先读进变量、改完再整份写回 |
 
 ---
@@ -185,7 +185,7 @@ sleep 7 && xcrun simctl io <UDID> screenshot /tmp/x.png
   所以"默认值"这件事在你自己的机器上根本验证不了。
 - **对策**：
   · 需要"产品口径改默认"时，别只改 `??`，加**版本化迁移键**一次性覆写
-    （本例 `allude.ai.voiceInput.reset.v1`），并且在 UI 读取之前、脚手架**之前**执行；
+    （本例 `codelumi.ai.voiceInput.reset.v1`），并且在 UI 读取之前、脚手架**之前**执行；
   · 脚手架写正式键时记得它会长驻，验完要么用迁移抹掉，要么换个 draft 键；
   · 验"默认值"必须在不带脚手架的冷启动上验，别拿截图自己骗自己。
 
@@ -197,7 +197,7 @@ sleep 7 && xcrun simctl io <UDID> screenshot /tmp/x.png
   商品 `state` 是 `READY_TO_SUBMIT`，沙盒照样能取到、页面照样渲染 `$0.99`。
 - **对策**：判断"价格为什么不显示"要**分开查三层** ——
   ① 价格排期有没有条目；② 商品 state 是什么；③ 真机/模拟器 `Product.products(for:)` 实取
-  （日志 `[allude-iap] storefront=… productID=displayPrice`）。
+  （日志 `[codelumi-iap] storefront=… productID=displayPrice`）。
   三层里只有第三层空才会显示「—」，别拿第二层去推第三层。
   ⚠️ `inAppPurchasePricePoints` 接口 403（no allowed operations），**金额查不到，别试**。
 

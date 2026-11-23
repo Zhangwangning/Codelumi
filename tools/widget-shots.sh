@@ -26,9 +26,9 @@
 set -uo pipefail
 
 DEVICE=${DEVICE:-C4C58A0C-6879-480E-A42F-7F8B1B1D9F5C}
-BUNDLE=${BUNDLE:-com.jikezhang.allude}
-APP=${APP:-/tmp/allude-dd/Build/Products/Debug-iphonesimulator/Allude.app}
-OUT=${OUT:-/Volumes/ZWN/Downloads/Project/Allude/Design-Snapshots}
+BUNDLE=${BUNDLE:-com.jikezhang.codelumi}
+APP=${APP:-/tmp/codelumi-dd/Build/Products/Debug-iphonesimulator/Codelumi.app}
+OUT=${OUT:-/Volumes/ZWN/Downloads/Project/Codelumi/Design-Snapshots}
 PRO=${PRO:-1}
 
 if [ ! -d "$APP" ]; then

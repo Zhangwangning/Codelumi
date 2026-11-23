@@ -1,7 +1,7 @@
 ---
 name: apple-hig
 description: Apple 人机界面指南（HIG）的离线镜像与提炼，覆盖 Apple HIG 全站 167 篇主题页原文（基础：布局/材质/字体排印/颜色/图标/图像/深色模式/动效/触感/无障碍/包容性/编写/品牌/RTL；组件：标签页栏/工具栏/列表/按钮/面板/弹窗…；模式：启动/加载/设置/搜索/数据输入/反馈…；技术：小组件/实时活动/通知…；以及 iPhone Duo 与其它平台专属页）。用于：改任何一屏 UI 前确认官方口径；判断某个做法「是我们自创的」还是「Apple 本来就要求这样」；写文案、挑图标、定字号、加动效、做权限请求时找依据；以及给评审/审核准备解释。
-license: 内部使用（Allude 项目自有）。官方原文版权归 Apple，此处仅作离线查阅与引用。
+license: 内部使用（Codelumi 项目自有）。官方原文版权归 Apple，此处仅作离线查阅与引用。
 sources: https://developer.apple.com/cn/design/human-interface-guidelines/ 全部 167 个主题页（2026-11-21 抓取，正文取自 Apple 文档 JSON）；液态玻璃一篇取自 developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass
 ---
 
