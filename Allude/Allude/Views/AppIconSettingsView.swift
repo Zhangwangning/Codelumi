@@ -44,11 +44,8 @@ struct AppIconSettingsView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
 
-                Text("更换后，桌面、App 资源库、多任务和通知里的图标会一起改变。")
-                    .font(AppTheme.TypeScale.note)
-                    .foregroundStyle(.tertiary)
-                    .padding(.horizontal, 4)
-                    .fixedSize(horizontal: false, vertical: true)
+                // 🔴 2026-11-22 主人：删掉「更换后，桌面、App 资源库、多任务和通知里的
+                //    图标会一起改变。」—— 换图标当然是全局换，这行是废话。
             }
             .padding(.horizontal, AppTheme.hInset)
             .padding(.top, 12)
@@ -56,7 +53,7 @@ struct AppIconSettingsView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("自定义 App 图标")
         .navigationBarTitleDisplayMode(.inline)
         // 截图/验收脚手架：命令行点不了格子，`APP_ICON=icon05` 强制切换。

@@ -19,11 +19,14 @@
 		AA0000000000000000000036 /* PickupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* PickupModels.swift */; };
 		AA0000000000000000000037 /* PickupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000023 /* PickupStorage.swift */; };
 		AA0000000000000000000038 /* AlludeWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* AlludeWidgetBundle.swift */; };
+		AA00000000000000000111 /* WidgetTransparency.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000110 /* WidgetTransparency.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		AA0000000000000000000039 /* PickupWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000025 /* PickupWidget.swift */; };
 		AA000000000000000000003A /* PickupWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000026 /* PickupWidgetIntent.swift */; };
 		AA000000000000000000003B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000027 /* Assets.xcassets */; };
 		AA000000000000000000003C /* WidgetVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003D /* WidgetVisuals.swift */; };
 		AA000000000000000000003E /* WidgetVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003D /* WidgetVisuals.swift */; };
+		AA0000000000000000000F02 /* WidgetPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F01 /* WidgetPresets.swift */; };
+		AA0000000000000000000F03 /* WidgetPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F01 /* WidgetPresets.swift */; };
 		AA0000000000000000000040 /* BrandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003F /* BrandPalette.swift */; };
 		AA0000000000000000000041 /* BrandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000003F /* BrandPalette.swift */; };
 		AA0000000000000000000042 /* PickupActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000044 /* PickupActivityAttributes.swift */; };
@@ -85,6 +88,7 @@
 		AA0000000000000000000022 /* PickupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupModels.swift; sourceTree = "<group>"; };
 		AA0000000000000000000023 /* PickupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupStorage.swift; sourceTree = "<group>"; };
 		AA0000000000000000000024 /* AlludeWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlludeWidgetBundle.swift; sourceTree = "<group>"; };
+		AA00000000000000000110 /* WidgetTransparency.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = WidgetTransparency.mm; sourceTree = "<group>"; };
 		AA0000000000000000000025 /* PickupWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupWidget.swift; sourceTree = "<group>"; };
 		AA0000000000000000000026 /* PickupWidgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupWidgetIntent.swift; sourceTree = "<group>"; };
 		AA0000000000000000000027 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -92,6 +96,7 @@
 		AA0000000000000000000029 /* Allude.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Allude.entitlements; sourceTree = "<group>"; };
 		AA000000000000000000002A /* AlludeWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AlludeWidget.entitlements; sourceTree = "<group>"; };
 		AA000000000000000000003D /* WidgetVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetVisuals.swift; sourceTree = "<group>"; };
+		AA0000000000000000000F01 /* WidgetPresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPresets.swift; sourceTree = "<group>"; };
 		AA000000000000000000003F /* BrandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandPalette.swift; sourceTree = "<group>"; };
 		AA0000000000000000000044 /* PickupActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupActivityAttributes.swift; sourceTree = "<group>"; };
 		AA0000000000000000000046 /* PickupLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickupLiveActivity.swift; sourceTree = "<group>"; };
@@ -168,6 +173,7 @@
 				AA0000000000000000000023 /* PickupStorage.swift */,
 				AA0000000000000000000062 /* AppIconChoice.swift */,
 				AA000000000000000000003D /* WidgetVisuals.swift */,
+				AA0000000000000000000F01 /* WidgetPresets.swift */,
 				AA000000000000000000003F /* BrandPalette.swift */,
 				AA0000000000000000000044 /* PickupActivityAttributes.swift */,
 				AA0000000000000000000047 /* PickupActivityController.swift */,
@@ -185,6 +191,7 @@
 				AA0000000000000000000024 /* AlludeWidgetBundle.swift */,
 				AA0000000000000000000025 /* PickupWidget.swift */,
 				AA0000000000000000000026 /* PickupWidgetIntent.swift */,
+				AA00000000000000000110 /* WidgetTransparency.mm */,
 				AA0000000000000000000046 /* PickupLiveActivity.swift */,
 				AA0000000000000000000027 /* Assets.xcassets */,
 				AA0000000000000000000060 /* PrivacyInfo.xcprivacy */,
@@ -330,6 +337,7 @@
 				AA0000000000000000000033 /* PickupStorage.swift in Sources */,
 				AA0000000000000000000063 /* AppIconChoice.swift in Sources */,
 				AA000000000000000000003C /* WidgetVisuals.swift in Sources */,
+				AA0000000000000000000F02 /* WidgetPresets.swift in Sources */,
 				AA0000000000000000000040 /* BrandPalette.swift in Sources */,
 				AA0000000000000000000042 /* PickupActivityAttributes.swift in Sources */,
 				AA0000000000000000000048 /* PickupActivityController.swift in Sources */,
@@ -354,9 +362,11 @@
 				AA0000000000000000000037 /* PickupStorage.swift in Sources */,
 				AA0000000000000000000064 /* AppIconChoice.swift in Sources */,
 				AA000000000000000000003E /* WidgetVisuals.swift in Sources */,
+				AA0000000000000000000F03 /* WidgetPresets.swift in Sources */,
 				AA0000000000000000000041 /* BrandPalette.swift in Sources */,
 				AA0000000000000000000038 /* AlludeWidgetBundle.swift in Sources */,
 				AA0000000000000000000039 /* PickupWidget.swift in Sources */,
+				AA00000000000000000111 /* WidgetTransparency.mm in Sources */,
 				AA000000000000000000003A /* PickupWidgetIntent.swift in Sources */,
 				AA0000000000000000000043 /* PickupActivityAttributes.swift in Sources */,
 				AA0000000000000000000045 /* PickupLiveActivity.swift in Sources */,
@@ -506,7 +516,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Config/Allude.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 329;
+				CURRENT_PROJECT_VERSION = 349;
 				DEVELOPMENT_TEAM = 8499X3S9X8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -540,7 +550,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Config/Allude.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 329;
+				CURRENT_PROJECT_VERSION = 349;
 				DEVELOPMENT_TEAM = 8499X3S9X8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -575,7 +585,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = Config/AlludeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 329;
+				CURRENT_PROJECT_VERSION = 349;
 				DEVELOPMENT_TEAM = 8499X3S9X8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -604,7 +614,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = Config/AlludeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 329;
+				CURRENT_PROJECT_VERSION = 349;
 				DEVELOPMENT_TEAM = 8499X3S9X8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

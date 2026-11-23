@@ -62,7 +62,7 @@ struct VersionHistoryView: View {
             "新增 iCloud 同步（默认关闭）：记录存进你自己的 iCloud，多台设备自动合并，不经过开发者服务器。",
             "驿站按「一个取件地点」归组，待取页、已取页与桌面小组件共用同一套排序。",
             "待取页可以按快递驿站分组，到店一次取完；分组方式会记住。",
-            "桌面小组件可以关掉占位符，没排满的位置直接留白。",
+            "桌面小组件有 16 款：一张清单（小中大可就地换尺寸），加上取件进度、最近一件、驿站分布、最久未取、单个取件码各按尺寸分开；背景可以选真透明或液态玻璃。",
             "通知不再一直堆在通知中心：取件或删除后自动撤掉对应的那条。",
             "默认图标换成「黑盒立体」，十五套图标都能在设置里换。",
         ], beta: BetaBuildLog.all),
@@ -200,7 +200,7 @@ struct VersionHistoryView: View {
         // 原先 `.background(...)` 挂在 ScrollView 上，在分栏 detail 列里撑不满，
         // 露出 NavigationStack 的默认白底，表现为「右栏整片白、左栏浅灰」。
         ZStack {
-            Color(.systemGroupedBackground)
+            AppTheme.pageBackground
                 .ignoresSafeArea()
 
             ScrollViewReader { proxy in

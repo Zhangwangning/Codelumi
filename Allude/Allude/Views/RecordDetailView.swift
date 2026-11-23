@@ -255,7 +255,7 @@ struct RecordDetailView: View {
         .animation(.spring(response: 0.30, dampingFraction: 0.85),
                    value: edit.isEditing)
         // 页面底 = 浅灰，卡片才是白（2026-09-23 修正）
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         // 标题恒为「详情」（2026-10-25 主人定）：此处曾用 `record.company`，
         // 结果是「拼多多发的、圆通承运」的件在标题上写「拼多多」，与卡片主名
         // （圆通快递）自相矛盾；短信平台名在卡内已单独标注，标题不再重复。
@@ -401,14 +401,9 @@ struct RecordDetailView: View {
             // kind 只是解析期的后台分类，用户不需要知道「这条是按取件码还是运单号命中的」。
             // Codelumi内已不再区分凭证类型，`KindTag` 组件也已整体删除。
             HStack(spacing: 8) {
-                // 图标与主名都跟随「快递公司 > 短信平台」，与列表卡同口径。
-                // 只有「主名本身就是驿站」这一种极端情况（courier 与 company 都空）
-                // 才用驿站图标 —— 判定收在 `PickupNaming.isStationPrimary` 一处。
-                if naming.isStationPrimary, let station = naming.station {
-                    StationLogo(name: station, size: 26)
-                } else {
-                    CourierLogo(company: titleIconSource, size: 26)
-                }
+                // 图标 = 主名第一段（快递公司 > 短信平台 > 驿站），
+                // 画法与列表卡同源 —— 统一在 `PickupIcon` 里，别再各写一遍分支。
+                PickupIcon(naming: naming, size: 26)
 
                 Text(titlePrimary.L)
                     .font(.system(size: 16, weight: .semibold))

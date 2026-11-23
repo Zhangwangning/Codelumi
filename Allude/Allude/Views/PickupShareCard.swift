@@ -102,20 +102,14 @@ struct PickupShareCard: View {
         // 之前这里是第三套写法（`courier > 驿站 > 平台`），分享出去的名字
         // 与列表卡自相矛盾（拼多多发的圆通件在列表是「圆通快递｜拼多多」）。
         let naming = record.namingResolved
-        let iconSource = naming.iconSource
         let titlePrimary = naming.primary
         let titleSecondary: String? = naming.secondaryLabel
 
         VStack(alignment: .leading, spacing: 0) {
             // 顶部：品牌身份行
             HStack(spacing: 12) {
-                Group {
-                    if naming.isStationPrimary, let station = naming.station {
-                        StationLogo(name: station, size: 44)
-                    } else {
-                        CourierLogo(company: iconSource, size: 44)
-                    }
-                }
+                // 图标 = 主名第一段，画法与列表卡同源（`PickupIcon`）
+                PickupIcon(naming: naming, size: 44)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
@@ -287,11 +281,8 @@ struct PickupShareCard: View {
         let tint = CourierBrand.color(for: naming.iconSource)
         return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 10) {
-                if naming.isStationPrimary, let station = naming.station {
-                    StationLogo(name: station, size: 22)
-                } else {
-                    CourierLogo(company: naming.iconSource, size: 22)
-                }
+                // 图标 = 主名第一段，与列表卡 / 详情页同一实现（`PickupIcon`）
+                PickupIcon(naming: naming, size: 22)
 
                 Text(naming.primary.L)
                     .font(.system(size: 15, weight: .semibold))
@@ -569,8 +560,8 @@ struct SharePreviewSheet: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(colorScheme == .dark
-                    ? Color(.secondarySystemGroupedBackground)
-                    : Color(.systemGroupedBackground))
+                    ? AppTheme.cardSurface
+                    : AppTheme.pageBackground)
         // 🔴 Duo 外屏是**D 型屏**（2026-10-25 主人指出，2026-11-01 再次强调）：
         //    铰链侧（左）是小圆角、机身外缘（右）是大圆角，四角同半径必然错位。
         //    直板机仍用统一圆角。
@@ -871,8 +862,8 @@ struct SharePreviewSheet: View {
         // （深色下 #1C1C1E）后边界清晰；浅色下它偏白，会丢掉「浅灰面板 + 白卡」的层次，
         // 所以按 colorScheme 分别取值，浅色仍走 systemGroupedBackground。
         .background(colorScheme == .dark
-                    ? Color(.secondarySystemGroupedBackground)
-                    : Color(.systemGroupedBackground))
+                    ? AppTheme.cardSurface
+                    : AppTheme.pageBackground)
         // 🔴 Duo 外屏是 **D 型屏**（2026-10-25 主人指出）：
         // 左边（铰链侧）两角几乎是方的，右边（机身外缘）两角才是大圆角。
         // 四角用同一个半径必然错位 —— 这里用 UnevenRoundedRectangle 分边设置。
@@ -1006,7 +997,7 @@ struct QuickShareAction: View {
                     .font(.system(size: 19, weight: .medium))
                     .frame(width: 44, height: 44)
                     .background(highlight ? Color.green.opacity(0.15)
-                                          : Color(.secondarySystemGroupedBackground),
+                                          : AppTheme.cardSurface,
                                 in: Circle())
                     .foregroundStyle(highlight ? Color.green : Color.primary)
                 Text(title.L)

@@ -60,6 +60,46 @@ enum AppTheme {
     /// ⚠️ 同样不能单独拿去当正文色（浅端在白底上对比度不够）。
     static let doneTintLight = Color.adaptive(light: 0x3FD9BA, dark: 0x6FE8CE)
 
+    // MARK: 热力红（大尺寸「取件进度」折线图上的圆点用）
+    //
+    // 🔴 2026-11-22 老大定规：
+    //   「已全部完成取件的圆点用绿色系；只要存在未完成取件的日期，根据数量多少用红色系
+    //    （颜色深代表未取件多）；没有件的日期就用浅灰色」。
+    //   —— 红色必须**分档**，只用一个红表达不出「哪天积压更狠」。
+    //
+    // 🔴 配色两轮返工（老大：「红色与绿色的颜色一点都不协调，太丑了」）：
+    //   第一版是「荧光粉红 + 青绿」，还配着蓝 / 橙数字 —— 一块画布上五种色相，
+    //   粉红又脏又跳。现在改成**低饱和陶土红**（杏陶 → 砖红），
+    //   与青绿形成柔和的冷暖对比而不是互相掐；绿色直接复用 `doneTint`，
+    //   让折线、面积、绿点和进度条**同色** —— 同一件事不该有两种绿。
+    /// 当天还有未取的件 —— 件数越多红得越深（越少越淡，不是越少越暗）。
+    ///
+    /// 档位压到 4 级：1 / 2 / 3 / 4 件以上。再细分在小圆点上人眼分不出来，反而像渲染脏了。
+    ///
+    /// 🔴 为什么不用「一个红 + 不同 opacity」：深底上 opacity 调低 = 混进背景 = **更暗**，
+    ///    于是「未取 1 件」比「未取 4 件」还暗 —— 与「深 = 未取多」正好反了（深色截图实测）。
+    ///    所以浅/深各给一套硬色值，两边都是「越少越淡」。
+    ///
+    /// 色相选「陶土 / 赤陶红」而不是纯红或玫红：同屏已经有蓝（待取）、青绿（已取）、
+    /// 橙（今日到件）三种鲜明色相，红再取纯正红或粉红就是第四种"喊话"的颜色。
+    /// 陶土红偏暖、饱和度低，和橙同属暖调却分得开，跟青绿形成冷暖对比而不打架。
+    static func undoneHeat(_ pending: Int) -> Color {
+        switch pending {
+        case ...0: return .clear
+        case 1:    return Color.adaptive(light: 0xE8B4A9, dark: 0xF6C7BD)
+        case 2:    return Color.adaptive(light: 0xD08D7E, dark: 0xEDA79A)
+        case 3:    return Color.adaptive(light: 0xC0664F, dark: 0xE27B68)
+        default:   return Color.adaptive(light: 0xA34734, dark: 0xDA5741)
+        }
+    }
+
+    /// 某天**没有件** —— 热力网格里的浅灰占位，不能和「有件且全取完」的绿混起来。
+    ///
+    /// 🔴 用实色而不是 `Color.secondary.opacity(0.18)`：浅色卡（#F2F2F5）上
+    /// 0.18 的灰几乎看不见，365 个点断成一地残渣；深色卡上同一个 opacity 又偏亮。
+    /// 实色两套值比 opacity 稳，也方便对着截图微调。
+    static let emptyDayDot = Color.adaptive(light: 0xDDDCE0, dark: 0x3C3C41)
+
     // MARK: 功能色板（图标底 / 分区标记 / 提示条，提供色彩节奏）
 
     static let sky     = Color.adaptive(light: 0x0284C7, dark: 0x38BDF8)
@@ -67,6 +107,20 @@ enum AppTheme {
     static let pink    = Color.adaptive(light: 0xDB2777, dark: 0xF472B6)
     static let amber   = Color.adaptive(light: 0xB45309, dark: 0xFBBF24)
     static let indigo  = Color.adaptive(light: 0x4338CA, dark: 0x9BABFF)
+
+    // MARK: 底色分层（2026-11-23 老大：深色不要纯黑，一层比一层亮）
+    //
+    // 🔴 系统语义色在深色下的问题：`systemGroupedBackground` 是**纯黑 #000**，
+    //    卡片和背景糊成一块，层次全没了。这里自己给三档：
+    //      page  <  card  <  sheet
+    //    浅色档保持系统观感（#F2F2F7 底 + 白卡），深色档用三级深灰。
+    //
+    //    对比度（WCAG）：白字 / #1F1F23 ≈ 14.6:1，次级灰 `#A3A3AC` / #1F1F23 ≈ 6.4:1，
+    //    都高于 4.5:1。
+    static let pageBackground = Color.adaptive(light: 0xF2F2F7, dark: 0x1A1A1D)
+    static let cardSurface    = Color.adaptive(light: 0xFFFFFF, dark: 0x26262B)
+    /// 半屏面板 / 弹层：比卡片再亮一档，浮在卡片之上
+    static let sheetSurface   = Color.adaptive(light: 0xFFFFFF, dark: 0x32323A)
 
     // MARK: 布局常量
     //
@@ -118,11 +172,18 @@ enum AppTheme {
     //    白字压在香槟金上对比度只有 2.3:1（远低于 4.5:1 的可读线），
     //    看着像蒙了层雾。所以这里给三个档位，谁也不能单独拿去当文字色。
     /// 香槟金浅档 —— 卡片底、横幅渐变起点
-    static let champagneLight = Color(red: 0.98, green: 0.92, blue: 0.79)   // #FAEBC9
+    /// 🔴 2026-11-23：深色下面这组香槟色会变成一整块刺眼的米白（设置页顶部 PRO 横幅）。
+    /// 深色档改成深琥珀渐变 + 浅金文字，亮度降下来但仍然"贵"。
+    static let champagneLight = Color.adaptive(light: 0xFAEBC9, dark: 0x0E2350)
     /// 香槟金中档 —— 横幅渐变终点、选中描边、按钮底
-    static let champagne      = Color(red: 0.85, green: 0.72, blue: 0.45)   // #D9B873
+    static let champagne      = Color.adaptive(light: 0xD9B873, dark: 0x1B5BD0)
     /// 深金墨 —— 落在白底或浅金底上的**文字与图标**
-    static let champagneInk   = Color(red: 0.44, green: 0.33, blue: 0.11)   // #70541C
+    static let champagneInk   = Color.adaptive(light: 0x70541C, dark: 0xEAF2FF)
+    /// 主行动键（订阅页「买断 / 订阅」）：深色下用**金色实心 + 近黑字**，
+    /// 在一屏石墨里它是唯一的高亮块；浅色档保持原来的香槟底 + 褐字。
+    static let ctaFill = Color.adaptive(light: 0xD9B873, dark: 0x0B63F3)
+    static let ctaInk  = Color.adaptive(light: 0x4A340C, dark: 0xFFFFFF)
+
     /// 图标底色 —— 比 `champagneInk` 浅一档（2026-10-31 主人：图标太深了）。
     ///
     /// 图标是"实心金色方块 + 白色符号"，所以底色深浅由**白符号的对比度**决定：
@@ -132,7 +193,7 @@ enum AppTheme {
     /// #A8873F  3.39:1   ← 再浅就开始发虚，别越过这条
     /// #D9B873  1.90:1   ← 白符号几乎看不见，不能用
     /// ```
-    static let champagneIcon  = Color(red: 0.56, green: 0.42, blue: 0.18)   // #8F6C2E
+    static let champagneIcon  = Color.adaptive(light: 0x8F6C2E, dark: 0x9CC4FF)
 
     /// 付费面专用：**Apple 系统蓝**（保留，`champagne*` 是当前方案）
     static let appleBlue = Color(.systemBlue)

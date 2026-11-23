@@ -23,6 +23,8 @@ struct AICapabilityView: View {
     /// 检测完成后短暂闪一下，让用户知道"刷新了"
     @State private var justChecked = false
 
+    /// 「打开 Apple 智能」总开关（2026-11-22 主人：页面顶部要一个开关）。
+    @State private var aiEnabled = AISettings.isEnabled
     private var availability: SystemLanguageModel.Availability {
         _ = refreshToken
         return SystemLanguageModel.default.availability
@@ -31,27 +33,55 @@ struct AICapabilityView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                statusCard
-                purposeCard
-                // 🔴 2026-11-08 主人：国行用不了端侧接口，给个「去开启」按钮点了也没用。
-                //    只在**系统确实有开关**（Apple 智能未开启）时才展示这一卡。
-                // 🔴 2026-11-20 主人：原「可选：千问扩展」卡片删除 —— App 只留 Apple
-                //    端侧能力，不引导、不提及任何第三方模型服务。
-                if needsSystemEnable {
-                    enableHintCard
+                masterCard
+                // 🔴 2026-11-22 主人：「如果设备支持，检测的卡片就不要了」。
+                //    能用的时候还摆一个「重新检测」按钮，等于让人怀疑「是不是没检测到」。
+                //    所以检测这一整张卡只在**用不了**的时候出现。
+                if !isAvailable {
+                    statusCard
                 }
+                aboutCard
             }
             .padding(.horizontal, AppTheme.hInset)
             .padding(.top, 18)
             .padding(.bottom, 40)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("Apple 智能")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: logOnce)
     }
 
-    // MARK: 结论
+    // MARK: 总开关
+
+    /// 页首「打开 Apple 智能」。
+    ///
+    /// 🔴 2026-11-22 主人两次强调：「功能标题不要提示」。
+    ///    所以这里**只有一行标题 + 开关**，标题下面不挂任何说明文字。
+    ///    设备不支持时的处理也不靠文字交代 —— 开关直接置灰，点不动本身就是答案。
+    private var masterCard: some View {
+        Toggle(isOn: Binding(
+            get: { aiEnabled },
+            set: { newValue in
+                aiEnabled = newValue
+                AISettings.setEnabled(newValue)
+                // 只写这一个键：本页不再有任何联动开关
+                // （语音录入 2026-11-22 整块删除，这里不剩可联动的东西）。
+                DiagnosticsLog.record("aiCapability", "aiEnabled=\(newValue)")
+            }
+        )) {
+            Text("打开 Apple 智能")
+                .font(AppTheme.TypeScale.rowTitleMedium)
+        }
+        .tint(AppTheme.accent)
+        .disabled(!isAvailable)
+        .opacity(isAvailable ? 1 : 0.55)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .settingsCard()
+    }
+
+    // MARK: 结论（仅不可用时出现）
 
     private var statusCard: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -61,21 +91,18 @@ struct AICapabilityView: View {
                         .controlSize(.small)
                         .tint(AppTheme.accent)
                 } else {
-                    Image(systemName: isAvailable ? "checkmark.seal.fill" : "xmark.seal.fill")
+                    Image(systemName: "xmark.seal.fill")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(isAvailable ? AppTheme.doneTint : AppTheme.pendingTint)
+                        .foregroundStyle(AppTheme.pendingTint)
                 }
-                Text(isChecking ? "正在检测…" : (isAvailable ? "可以用" : "暂时用不了"))
+                Text(isChecking ? "正在检测…" : "暂时用不了")
                     .font(AppTheme.TypeScale.rowTitleMedium)
                 Spacer(minLength: 0)
             }
 
             // 🔴 2026-11-08 主人：用户只关心「能不能用」，不关心枚举。
-            Text(isChecking
-                 ? "正在向系统查询本机是否可用…"
-                 : (isAvailable
-                    ? "Codelumi会用 iPhone 本机的智能来识别短信，不联网、不上传。"
-                    : "这台 iPhone 目前没向Codelumi开放本机智能，Codelumi会自动改用正则解析，收码照样正常。"))
+            //    2026-11-22 再收一遍：一句话说完，不铺排。
+            Text(isChecking ? "查询中…" : "本机未开放端侧智能，解析仍走正则，收码正常。")
                 .font(AppTheme.TypeScale.body)
                 .foregroundStyle(.secondary)
                 .lineSpacing(3)
@@ -94,7 +121,7 @@ struct AICapabilityView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 13, weight: .semibold))
                     }
-                    Text(isChecking ? "检测中…" : (justChecked ? "已检测" : "重新检测"))
+                    Text(isChecking ? "检测中…" : (justChecked ? "已检测" : "检测 Apple 智能"))
                         .font(AppTheme.TypeScale.bodyMedium)
                 }
                 .frame(maxWidth: .infinity)
@@ -116,10 +143,9 @@ struct AICapabilityView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCard()
         .opacity(isChecking ? 0.55 : 1)
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.accent.opacity(justChecked ? 0.55 : 0), lineWidth: 1.5)
-        }
+        // 🔴 2026-11-22 主人：「检测时不要蓝色的边框」——
+        //    原来这里在检测成功后套了一圈 `accent` 描边，看着像输入框获得焦点。
+        //    现在反馈只靠按钮自身的文案（检测中 / 已检测），不再描边。
         .animation(AppMotion.standard, value: isChecking)
         .animation(AppMotion.standard, value: justChecked)
     }
@@ -137,19 +163,20 @@ struct AICapabilityView: View {
         withAnimation(AppMotion.standard) { justChecked = false }
     }
 
-    // MARK: 为什么有这个功能 / 系统开关提示
+    // MARK: 关于
 
-    private var purposeCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("为什么有这个功能")
+    /// 🔴 2026-11-22 主人：「下面的卡片标题改成关于Codelumi中Apple智能，内容优化一下，
+    ///    明确说明此功能无需互联网，端侧运行，辅助增强，App 解析功能主要是正则表达式等」
+    ///    —— 后半句「要精则精，不要说废话」：每条只留一句，不重复解释。
+    private var aboutCard: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text("关于 Codelumi 中 Apple 智能")
                 .font(AppTheme.TypeScale.rowTitleMedium)
 
-            bullet("shield.lefthalf.filled",
-                   "Codelumi用 iPhone 自己的端侧智能辅助识别短信，**不联网、不上传**——数据一直在本机。")
-            bullet("text.alignleft",
-                   "识别主力是本机正则；端侧智能在旁边补齐、校对，结果更完整。系统没开放时只是少了这层辅助，收码照常。")
-            bullet("questionmark.circle",
-                   "能不能用由 iOS 决定，Codelumi没法绕过，也不会伪造。")
+            bullet("wifi.slash", "无需互联网，端侧运行，断网可用。")
+            bullet("iphone.gen3", "短信原文不出本机。")
+            bullet("text.alignleft", "主解析是正则，不依赖模型。")
+            bullet("wand.and.stars", "智能只补缺失字段，不覆盖已有结果。")
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -170,47 +197,7 @@ struct AICapabilityView: View {
         }
     }
 
-    private var enableHintCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("怎么打开")
-                .font(AppTheme.TypeScale.rowTitleMedium)
-
-            Text("Apple 智能默认是关的，可以在 **设置 › Apple 智能与 Siri** 里打开。开不开这个开关由系统和你的账号地区决定，Codelumi 不代你判断，也不会为此联网。")
-                .font(AppTheme.TypeScale.note)
-                .foregroundStyle(.secondary)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
-                }
-            } label: {
-                Text("前往系统设置")
-                    .font(AppTheme.TypeScale.body.weight(.medium))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .appGlass(.capsule, tint: AppTheme.accent, interactive: true)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .settingsCard()
-    }
-
     // MARK: 工具
-
-    /// 系统明确表示「Apple 智能未开启」—— 这种才值得引导用户去设置里打开。
-    /// 国行返回的是 `deviceNotEligible`（第三方接口没开放），引导也没用，不显示。
-    private var needsSystemEnable: Bool {
-        if case .unavailable(let reason) = availability,
-           case .appleIntelligenceNotEnabled = reason {
-            return true
-        }
-        return false
-    }
 
     private var isAvailable: Bool {
         if case .available = availability { return true }
@@ -264,7 +251,7 @@ struct AICapabilityUnsupportedView: View {
             .padding(.horizontal, AppTheme.hInset)
             .padding(.vertical, 16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("Apple 智能")
         .navigationBarTitleDisplayMode(.inline)
     }

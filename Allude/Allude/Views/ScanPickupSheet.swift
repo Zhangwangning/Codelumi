@@ -126,7 +126,7 @@ final class ScanPickupModel: ObservableObject {
     ///
     /// 聊天截图常只有「8-4-2019 菜鸟驿站」这种没有标签的一行 —— 正则无从下手，
     /// 而原来的确认页在 `parsedList` 为空时只给「重新识别」，用户在这个 sheet 里
-    /// 没有补救路径，只能退出去换「粘贴解析添加」。这里改成：把文字里**唯一一个**
+    /// 没有补救路径，只能退出去换「文本录入」。这里改成：把文字里**唯一一个**
     /// 像取件码的片段预填进可编辑草稿，用户改对了再添加。
     ///
     /// 保守规则：只认「含数字、4–24 字符」的独立片段；11 位手机号、日期形态不算；
@@ -219,7 +219,7 @@ struct ScanPickupSheet: View {
                     }
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.sheetSurface)   // 半屏面板 = 比页面亮一档
             .navigationTitle("识别添加")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -236,6 +236,13 @@ struct ScanPickupSheet: View {
             // 首次进入主动请求相机权限；请求一结束就刷新可用性，
             // 否则「拒绝」之后界面会一直停在黑屏取景框（2026-10-25 审查修）
             .task {
+                // 「关于 › 使用权限」里关掉相机 → 连系统授权都不问，
+                // 直接把用户送到相册（那一路还能用）。
+                if !PermGate.storedIsOn(.camera), PermGate.storedIsOn(.photos) {
+                    model.mode = .photo
+                } else if !PermGate.storedIsOn(.photos), PermGate.storedIsOn(.camera) {
+                    model.mode = .capture
+                }
                 await refreshAvailability()
                 // 截图脚手架：`SIMCTL_CHILD_MANUAL_DRAFT=1` 直接走一次
                 // 「没识别到 → 手动核对后添加」的兜底，验可编辑草稿卡能正常出来。
@@ -255,6 +262,11 @@ struct ScanPickupSheet: View {
     /// 读相机权限并落到 `availability`（必要时先触发系统授权弹窗）
     @MainActor
     private func refreshAvailability() async {
+        // 「关于 › 使用权限」里关掉相机 → 不申请系统授权，直接按不可用处理
+        if !PermGate.storedIsOn(.camera) {
+            availability = CameraAvailability.current()
+            return
+        }
         // 截图脚手架下不必真去要权限：那个系统弹窗会盖住整块取景区，
         // 弹窗本身又点不掉（simctl 没有点击通道），拍出来什么也看不到。
         if ProcessInfo.processInfo.environment["FAKE_CAMERA"] == "1" {
@@ -572,7 +584,7 @@ struct ScanPickupSheet: View {
                         .font(.system(size: 15, weight: .medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Color(.secondarySystemGroupedBackground), in: .capsule)
+                        .background(AppTheme.cardSurface, in: .capsule)
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)

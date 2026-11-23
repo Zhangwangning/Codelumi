@@ -233,14 +233,17 @@ struct AlludeApp: App {
         // ⚠️ 2026-10-25：`ACCOUNTS` / `AVATAR` 两个账户脚手架随**账户功能整体下线**
         // 一并删除 —— 产品是纯离线本地工具，不需要任何账户概念。
 
-        // 小组件显示内容脚手架：`DISPLAY=full|codeOnly|companyOnly|stationOnly`。
-        // 同样走正式链路（写 App Group 的 widget-display.json），
-        // 因此设置页里的选中态、效果预览与预览页会一起变 —— 没有特例分支。
-        // 2026-10-27：设置页改成五个开关后，`preset.options` 不再是 Optional
-        // （预设只剩四种固定组合，没有 `.custom` 那条"没有组合"的分支了）。
-        if let raw = environment["DISPLAY"],
-           let preset = WidgetDisplayPreset(rawValue: raw) {
-            WidgetDisplayOptions.save(preset.options)
+        // ⚠️ 2026-11-22：小组件显示内容脚手架 `DISPLAY=…` 随「六个开关」一起删除 ——
+        //    显示内容现在由款式（`WidgetPreset`）编译期固定，没有可写的用户配置了。
+        //    需要拍某一款的截图时用 `SCREEN=widgets` + `WIDGET_SIZE=small|medium|…`
+        //    （见 `WidgetPreviewGallery`），它按款式渲染，不需要预写任何状态。
+
+        // 小组件背景材质脚手架：`WIDGET_BG=solid|clear|glass|clearGlass`
+        // （2026-11-22 起是两个叠加开关，四种组合；走正式 setter，写 App Group）。
+        if let raw = environment["WIDGET_BG"],
+           let style = WidgetBackground(rawValue: raw) {
+            WidgetBackgroundSetting.setClear(style.wantsTransparent)
+            WidgetBackgroundSetting.setGlass(style.wantsGlass)
         }
 
         // ⚠️ 2026-09-23：原先这里的 `SIGNED_IN` / `BOUND` 两个脚手架随第三方登录
@@ -264,17 +267,16 @@ struct AlludeApp: App {
             CodeAppearanceSettings.setGroupsMultipleCodes(raw == "1")
         }
 
-        // 2026-11-17 驿站内排序：命令行点不到菜单，用 INNER_ORDER=codeAsc|codeDesc|oldest 直接写。
-        if let raw = environment["INNER_ORDER"],
-           let order = StationInnerOrder(rawValue: raw) {
-            StationInnerOrder.set(order)
-            print("[allude-verify] innerOrder=\(order.rawValue)")
-        }
+        // 2026-11-23：驿站内排序设置已删除，`INNER_ORDER` 脚手架参数一并作废。
 
         switch environment["SCREEN"] {
         case "ingest":
-            let outcome = PickupStore.shared.ingest(environment["SEED"] ?? "")
-            print("[allude-verify] ingest => \(outcome.dialog)")
+            // `INGEST_INAPP=1` 走「App 内录入」那条来源（不推通知），
+            // 用来验 2026-11-22 的口径：「除 App 内录入外，其他入库都要推通知」。
+            // 不带这个变量 = 外部来源（快捷指令 / 分享扩展），会推。
+            let source: PickupIngestSource = environment["INGEST_INAPP"] == "1" ? .inApp : .external
+            let outcome = PickupStore.shared.ingest(environment["SEED"] ?? "", source: source)
+            print("[allude-verify] ingest => \(outcome.dialog) source=\(source)")
 
         case "codeGroupSeed":
             // 2026-11-16「一张卡片多个取件码」验收种子：一条短信两个码，
@@ -728,6 +730,14 @@ struct AlludeApp: App {
                 case "settings", "profile":
                     // 设置页（原「我的」面板重构，见 ProfileView.swift）
                     NavigationStack { SettingsView() }
+                case "about":
+                    // 关于 Codelumi（2026-11-22 截图用：单列布局下 `SETTINGS_PANE`
+                    // 只能改分栏选中项，进不了二级页，命令行点不到那一行）
+                    NavigationStack { AboutAlludeView() }
+                case "openSource":
+                    // 关于 › 开源项目信息（2026-11-21 新增；2026-11-22 与上面的
+                    // `case "about"` 放在一起，避免 switch 里出现重复 case）
+                    NavigationStack { OpenSourceView() }
                 case "settingsPush":
                     // 🔍 返回按钮排查脚手架：程序化 push 到使用教程，
                     // 复现「设置 → 使用教程」的真实导航栏形态（constant path 只看不点）。
@@ -758,7 +768,7 @@ struct AlludeApp: App {
                     // push 使用教程后，导航栏/返回按钮是否被根上的 hidden 传播吞掉。
                     NavigationStack(path: .constant(["guide"])) {
                         TabView {
-                            Color(.systemGroupedBackground).ignoresSafeArea()
+                            AppTheme.pageBackground.ignoresSafeArea()
                         }
                         .toolbar(.hidden, for: .navigationBar)
                         .safeAreaInset(edge: .bottom) {
@@ -768,9 +778,6 @@ struct AlludeApp: App {
                         }
                         .navigationDestination(for: String.self) { _ in UsageGuideView() }
                     }
-                case "openSource":
-                    // 关于 › 开源项目（2026-11-21 新增）
-                    NavigationStack { OpenSourceView() }
                 case "credits":
                     // 关于 › 特别鸣谢（2026-11-21 新增）
                     NavigationStack { CreditsView() }
@@ -813,7 +820,7 @@ struct AlludeApp: App {
                     LegalDocumentView(document: .terms, extraHTML: StatementHTML.appended)
                 case "confirmClear":
                     // 弹窗是 overlay 形式，得挂在一个宿主视图上才拍得到
-                    Color(.systemGroupedBackground)
+                    AppTheme.pageBackground
                         .ignoresSafeArea()
                         .destructiveConfirm(
                             isPresented: .constant(true),
@@ -836,8 +843,8 @@ struct AlludeApp: App {
                     NavigationStack { StatementView() }
                 case "help":
                     NavigationStack { HelpCenterView() }
-                case "about":
-                    NavigationStack { AboutView() }
+                // ⚠️ 2026-11-22：原来这里还有一条 `case "about"` 指向旧 `AboutView`，
+                //    与上面（设置 › 关于）那条同名，switch 只认第一条 —— 直接删掉。
                 case "activation":
                     // 激活页（设备码 + 凭证输入）。设置里那一行命令行点不到，
                     // 逐页验收靠这个入口直渲。
@@ -924,8 +931,21 @@ struct AlludeApp: App {
                     NavigationStack { UsageGuideView() }
                 case "widgets":
                     NavigationStack { WidgetPreviewGallery() }
+                case "widgetPreset":
+                    // 款式详情页（设置 › 小组件 › 点某一张卡）。
+                    // 命令行点不到网格里的卡片，逐页验收只能靠这个入口。
+                    // `WIDGET_PRESET=<kind>` 指定哪一款，缺省给中尺寸「待取清单」。
+                    NavigationStack {
+                        WidgetPresetDetailView(
+                            preset: WidgetPreset.preset(id: ProcessInfo.processInfo.environment["WIDGET_PRESET"] ?? "")
+                                ?? WidgetPreset.all[3]
+                        )
+                    }
                 case "activity":
                     NavigationStack { ActivityPreviewGallery() }
+                case "permissions":
+                    // 关于 › 使用权限（2026-11-22）
+                    NavigationStack { PermissionsView() }
                 case "appearance":
                     NavigationStack { AppearanceSettingsView() }
                 case "personalization":

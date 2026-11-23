@@ -117,8 +117,8 @@ enum PickupActivityController {
                         station: stationName,
                         code: record.code,
                         address: record.address,
-                        tint: CourierBrand.info(for: nameSource).resolvedFrom,
-                        locker: record.widgetLockerLabel(WidgetDisplayOptions.load())),
+                        tint: CourierBrand.info(for: nameSource).inkOnDark,   // 深色玻璃底 → 用提亮版（2026-11-22）
+                        locker: record.widgetLockerLabel(WidgetDisplayOptions.full)),
             pendingCount: pendingCount,
             items: items,
             // App 图标的选择随状态一起过进程边界（详见 `ContentState.appIconRaw`）
@@ -139,8 +139,8 @@ enum PickupActivityController {
             station: stationName,
             code: record.code,
             address: record.address,
-            tint: CourierBrand.info(for: nameSource).resolvedFrom,
-            locker: record.widgetLockerLabel(WidgetDisplayOptions.load()))
+            tint: CourierBrand.info(for: nameSource).inkOnDark,   // 深色玻璃底 → 用提亮版（2026-11-22）
+            locker: record.widgetLockerLabel(WidgetDisplayOptions.full))
     }
 
     /// 锁屏卡的「上一页 / 下一页」：一页三条，整页整页地翻。
@@ -153,26 +153,26 @@ enum PickupActivityController {
         let all = pendingProvider?() ?? PickupStorage.load().filter { !$0.isPickedUp }
         let pending = all
         guard pending.count > 1 else { return }
-        let sorted = pending.sorted {
-            $0.receivedAt == $1.receivedAt
-                ? PickupSortLogic.tieBreak($0, $1)
-                : $0.receivedAt > $1.receivedAt
-        }
-        let perPage = PickupActivityAttributes.LockScreenMetrics.perPage
-        guard sorted.count > perPage else { return }   // 一页装得下就不用翻
+        // 🔴 2026-11-23 老大：「锁屏卡片的顺序和待取页面保持一致」。
+        //    以前这里自己按 `receivedAt` 排，和待取页（`lastNotifiedAt` + 分组口径）
+        //    是两套。直接复用页面那套 `PickupSortLogic.sort`，读同一个排序设置 ——
+        //    用户在待取页选「按驿站」，锁屏卡也按驿站；选「最近收到」，就按最近收到。
+        let sorted = PickupSortLogic.sort(pending, mode: PickupStorage.listSort)
+        guard sorted.count > 1 else { return }
         guard let current = Activity<PickupActivityAttributes>.activities.first else { return }
 
-        // 以**当前页的第一条**为准做基准，整页整页地翻
-        let anchorID = current.content.state.items?.first?.id ?? current.content.state.item.id
-        let startIndex = sorted.firstIndex { $0.id.uuidString == anchorID } ?? 0
-        let nextStart = ((startIndex + offset * perPage) % sorted.count + sorted.count) % sorted.count
+        // 🔴 2026-11-23 老大：「在取件码信息下方增加切换按钮，可以切换上一个/下一个，
+        //    **不是循环切换**」。所以这里一次走一条、到头就停，不再整页翻、也不回绕。
+        let anchorID = current.content.state.item.id
+        let index = sorted.firstIndex { $0.id.uuidString == anchorID } ?? 0
+        let target = min(max(index + offset, 0), sorted.count - 1)
+        guard target != index else { return }
 
-        // 从 nextStart 开始取一页（到末尾就回绕到开头）
-        let page = (0..<min(perPage, sorted.count)).map { sorted[(nextStart + $0) % sorted.count] }
-        let records = page.map { mapToItem($0) }
-        guard let head = records.first else { return }
+        // 卡片底部要显示「第几件 / 共几件」，把有序列表整份带过去（与首次构建同口径）。
+        let records = sorted.prefix(12).map { mapToItem($0) }
+        let head = records[target]
         let newState = PickupActivityAttributes.ContentState(
-            item: head, pendingCount: sorted.count, items: records,
+            item: head, pendingCount: sorted.count, items: Array(records),
             // 翻页可能跑在扩展进程里，那里读不到 App 的偏好 ——
             // 优先**沿用当前活动里已经带着的**那套图标，别在翻页时把它翻回默认值。
             appIconRaw: current.content.state.appIconRaw ?? AppIconStore.current.rawValue)
@@ -325,11 +325,11 @@ enum PickupActivityController {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
 
         // 一条待办都没有 → 收掉活动，别让锁屏挂着一张过期的取件码
-        let sorted = pending.sorted {
-            $0.receivedAt == $1.receivedAt
-                ? PickupSortLogic.tieBreak($0, $1)
-                : $0.receivedAt > $1.receivedAt
-        }
+        // 🔴 2026-11-23 老大：「锁屏卡片的顺序和待取页面保持一致」。
+        //    以前这里自己按 `receivedAt` 排，和待取页（`lastNotifiedAt` + 分组口径）
+        //    是两套。直接复用页面那套 `PickupSortLogic.sort`，读同一个排序设置 ——
+        //    用户在待取页选「按驿站」，锁屏卡也按驿站；选「最近收到」，就按最近收到。
+        let sorted = PickupSortLogic.sort(pending, mode: PickupStorage.listSort)
         guard let newest = sorted.first else {
             await endAll()
             return
@@ -355,10 +355,10 @@ enum PickupActivityController {
                         station: stationName,
                         code: newest.code,
                         address: newest.address,
-                        tint: CourierBrand.info(for: nameSource).resolvedFrom,
+                        tint: CourierBrand.info(for: nameSource).inkOnDark,   // 深色玻璃底 → 用提亮版（2026-11-22）
                         // 柜位 / 货架：跟随用户在小组件里选的显示设置
                         // （关掉「显示快递柜/货架」时这一位不出现，两处口径一致）
-                        locker: newest.widgetLockerLabel(WidgetDisplayOptions.load())),
+                        locker: newest.widgetLockerLabel(WidgetDisplayOptions.full)),
             // 锁屏卡要一页三条、右侧翻页（2026-11-08 主人定）：
             // 一次性送最近 12 条（四页），翻页在扩展里本地完成，不必再唤醒 App。
             pendingCount: pending.count,

@@ -28,19 +28,40 @@ import SwiftUI
 /// 材质在下、品牌色（opacity 0.10）在上 —— 顺序反了颜色会脏。
 struct ActivityCardShell: View {
     let tint: Color
+    /// 卡背那张"模糊封面"用的条目 —— 与真机 `PickupLiveActivity` 同一套画法，
+    /// 否则预览里看不到背板，验收会失真（2026-11-23 老大要在模拟器里先看）。
+    let backdropItem: PickupActivityAttributes.Item?
     let content: AnyView
 
-    init(tint: Color, @ViewBuilder content: () -> some View) {
+    init(tint: Color,
+         backdropItem: PickupActivityAttributes.Item? = nil,
+         @ViewBuilder content: () -> some View) {
         self.tint = tint
+        self.backdropItem = backdropItem
         self.content = AnyView(content())
     }
 
     var body: some View {
         content
             // HIG：锁屏卡标准内边距 14pt（宽=屏宽−22、高 84–160）
-            .padding(.horizontal, 14)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 18)   // 与真机同值：内容到卡片四边等距
+            .padding(.top, 22)
+            .padding(.bottom, 18)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // 背板：模糊图标 + 上淡下深的暗色渐变（与真机一致）
+            .background {
+                if let item = backdropItem {
+                    ZStack {
+                        CourierLogo(company: item.displayName, size: 240,
+                                    showsShadow: false, usesStaticAsset: true)
+                            .blur(radius: 28)
+                        LinearGradient(colors: [Color.black.opacity(0.18),
+                                                Color.black.opacity(0.34)],
+                                       startPoint: .top, endPoint: .bottom)
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             // 🔴 2026-10-28 主人：真机锁屏卡是 iOS 26 的**液态玻璃**，
             //    原来那层 `.ultraThinMaterial` 只是磨砂玻璃，发灰、没有折射和高光。
             //    `.glassEffect` 是系统 Liquid Glass 的原生实现：折射下层内容、
@@ -335,8 +356,11 @@ struct ActivityPreviewGallery: View {
                 station: station,
                 code: record.code,
                 address: record.address,
-                tint: CourierBrand.info(for: nameSource).resolvedFrom,
-                locker: record.widgetLockerLabel(WidgetDisplayOptions.load())
+                // 🔴 2026-11-22：锁屏卡 / 灵动岛永远是**深色玻璃底**，这里不能再传
+                //    `resolvedFrom`（品牌原色）—— 圆通紫这种暗品牌在上面就是一团暗紫。
+                //    统一传 `inkOnDark`（提亮版），与 App 内深色模式同一个取色口径。
+                tint: CourierBrand.info(for: nameSource).inkOnDark,
+                locker: record.widgetLockerLabel(WidgetDisplayOptions.full)
             )
         }
     }
@@ -446,7 +470,7 @@ struct ActivityPreviewGallery: View {
             .padding(.horizontal, AppTheme.hInset)
             .padding(.vertical, 18)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         // 🔴 2026-11-01 主人：开关行保留「实时活动」，导航栏换成更具体的名字，
         //    否则一行字在同一屏出现两次。
         .navigationTitle("实时活动")
@@ -719,7 +743,7 @@ struct ActivityPreviewGallery: View {
     // MARK: 舞台 · 锁屏卡片（独立对象，就地浮出）
 
     private var lockCardLayer: some View {
-        ActivityCardShell(tint: accent) {
+        ActivityCardShell(tint: accent, backdropItem: multiState.item) {
             ActivityLockScreenCard(state: multiState)
         }
         .frame(width: 374)
@@ -755,7 +779,9 @@ struct ActivityPreviewGallery: View {
     ///    差约四分之一。所以外壳高度 = 92 × 1.25 = **115**，内容仍按 92 布局、
     ///    在壳里居中 —— 多出来的 23pt 均匀落在上下，取件码与地址的相对间距不变。
     private var islandHeight: CGFloat {
-        isCompactState ? 43 : IslandExpandedMetrics.previewTotalHeight * 1.25
+        // 2026-11-23：内容自身已带四周等距内边距，外壳不再额外放大 1.25，
+        // 否则上下又会多出一圈空。
+        isCompactState ? 43 : IslandExpandedMetrics.previewTotalHeight
     }
 
     private var islandRadius: CGFloat { isCompactState ? 21.5 : 46 }
@@ -826,8 +852,9 @@ struct ActivityPreviewGallery: View {
 
     private var activityToggleSection: some View {
         // 🔴 2026-10-28 主人：「总开关」三个字删掉 —— 卡片里那行「显示实时活动」已说明一切。
+        // 🔴 2026-11-22 主人：只留作用，删掉「关闭后立刻收掉、重开自动恢复」这两句过程描述。
         SettingsGroup(title: "",
-                      note: "在锁屏与灵动岛上显示最新待取的取件码。关闭后立刻收掉卡片，重新打开后自动恢复。") {
+                      note: "在锁屏与灵动岛上显示最新待取的取件码。") {
             // 🔴 2026-11-01 主人：去掉「显示」二字，标题就叫「实时活动」。
             SettingsPlainRow(title: "实时活动") {
                 if EntitlementSnapshot.licensedPro {

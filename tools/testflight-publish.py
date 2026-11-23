@@ -35,7 +35,7 @@ import urllib.request
 
 API = "https://api.appstoreconnect.apple.com"
 BUNDLE_ID = "com.jikezhang.allude"
-EXTERNAL_GROUP_NAME = "Allude公测"
+EXTERNAL_GROUP_NAME = "Codelumi公测"
 LOCALE = "zh-Hans"
 
 KEY_ID = os.environ.get("ASC_KEY_ID", "34Z43R5SGY")

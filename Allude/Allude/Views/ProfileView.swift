@@ -60,6 +60,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     /// 2026-11-21 主人：关于页新增「开源项目」与「特别鸣谢」两页
     case openSource
     case credits
+    /// 2026-11-22 主人：「关于Codelumi页面中添加一个使用权限，里面列举App使用了的权限」
+    case permissions
     /// 2026-11-21 主人：「推荐给朋友」从「鼓励一下」挪到关于页（这一行是 ShareLink，不是 push）
     case share
     // 🔴 2026-11-20 主人：**第三方模型通道整个删除**，只保留 Apple 端侧智能，
@@ -76,7 +78,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         // 2026-11-12 主人：设置首页只写「快捷指令」，二级页标题仍是「快捷指令自动化」
         case .automation:   return "快捷指令"
         case .notification: return "通知"
-        case .widget:       return "桌面小组件"
+        case .widget:       return "小组件"
         case .codeManagement: return "取件码管理"
         // 🔴 2026-11-08 主人：只叫「实时活动」—— 灵动岛只有部分机型有，
         //    写进标题会让其他机型以为是专属功能。
@@ -106,8 +108,10 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .icloudSync:   return "iCloud 同步"
         case .encourage:    return "鼓励一下"
         case .privacySimple: return "隐私政策（简明版）"
-        case .openSource:   return "开源项目"
+        // 2026-11-22 主人：「开源项目」→「开源项目信息」
+        case .openSource:   return "开源项目信息"
         case .credits:      return "特别鸣谢"
+        case .permissions:  return "使用权限"
         case .share:        return "推荐给朋友"
         }
     }
@@ -146,6 +150,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .privacySimple: return "hand.raised.fill"
         case .openSource:   return "chevron.left.forwardslash.chevron.right"
         case .credits:      return "heart.text.square.fill"
+        case .permissions:  return "lock.shield.fill"
         case .share:        return "square.and.arrow.up.fill"
         }
     }
@@ -182,6 +187,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .icloudSync:   return AppTheme.sky
         case .openSource:   return AppTheme.indigo
         case .credits:      return AppTheme.pink
+        case .permissions:  return AppTheme.doneTint
         case .share:        return AppTheme.sky
         case .encourage:    return AppTheme.pendingTint
         case .privacySimple: return AppTheme.doneTint
@@ -213,8 +219,15 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     /// 隐私政策简明版 / 版本信息
     static let aboutDetailGroup: [SettingsPane] = [
         .encourage, .share, .termsDoc, .privacyDoc, .privacySimple,
-        .openSource, .credits, .version,
+        .permissions, .openSource, .credits, .version,
     ]
+
+    /// 「推荐给朋友」分享的文案（唯一真源）。
+    /// 🔴 2026-11-22 老大：「点击推荐给朋友怎么是打开版本历史页面」——
+    ///    `AboutAlludeView` 里这一行没走 ShareLink，落进了 NavigationLink，
+    ///    而它的 `destination` 又是 `default: VersionHistoryView()`，于是推到了版本历史。
+    ///    文案与路由都收到这里，两处入口（设置页 / 关于页）共用一份。
+    static let recommendText = "推荐 Codelumi：一个只在本机整理快递取件码的 App，不联网、不上传、不用注册。"
 }
 
 struct SettingsView: View {
@@ -302,7 +315,7 @@ struct SettingsView: View {
                 stackedSettings
             }
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppTheme.pageBackground.ignoresSafeArea())
         .overlay { feedbackToast }
         // 截图/验真脚手架（仅调试）：`SETTINGS_OPEN=icloudSync` 直接切到该面板
         // （命令行点不到行）。正式运行时该环境变量不存在，零影响。
@@ -436,7 +449,7 @@ struct SettingsView: View {
             ProcessInfo.processInfo.environment["SETTINGS_ANCHOR"] == "about" ? .bottom : .top
         )
         // 页面底 = 浅灰，卡片才是白（2026-09-23 修正口径，与全 App 一致）
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("设置")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -457,7 +470,7 @@ struct SettingsView: View {
             // 🔴 缺了 NavigationStack 标题会退化成**居中 inline**，和另外两页的大标题不一致
             //    （2026-11-15 主人要求「标题大小与直板机一致」）。
             ZStack {
-                Color(.systemGroupedBackground).ignoresSafeArea()
+                AppTheme.pageBackground.ignoresSafeArea()
                 NavigationStack {
                     VStack(spacing: 0) {
                         // 🔴 2026-11-15 三页统一：大标题自绘（34pt bold），位置字号与待取 / 已取 一致。
@@ -479,7 +492,7 @@ struct SettingsView: View {
                 }
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
-                        .background(Color(.systemGroupedBackground))
+                        .background(AppTheme.pageBackground)
                         // 🔴 标题必须挂在 **List 上**（与待取 / 已取 同口径）。
                         //    挂在外面那层 VStack 上会退化成居中 inline 小字，
                         //    和另外两页的大标题对不齐（2026-11-15 实测）。
@@ -503,7 +516,7 @@ struct SettingsView: View {
             //   ② NavigationStack 自身再垫一层浅灰；
             //   ③ 导航栏 toolbar 背景也显式设为浅灰（默认是 systemBackground 白）。
             ZStack {
-                Color(.systemGroupedBackground)
+                AppTheme.pageBackground
                     .ignoresSafeArea()
 
                 // 🔴 不带 `path:` —— 见 `isSplitLayout` 上方那段注释，path 会让
@@ -539,7 +552,7 @@ struct SettingsView: View {
                         // （2026-10-25 审查修：否则一进宽屏设置标签栏就没了）。
                         .environment(\.suppressTabBarCloak, true)
                 }
-                .background(Color(.systemGroupedBackground))
+                .background(AppTheme.pageBackground)
                 // 导航栏透明 → 露出下面的浅灰，避免顶部一条白
                 .toolbarBackground(.hidden, for: .navigationBar)
             }
@@ -704,6 +717,8 @@ struct SettingsView: View {
         // 2026-11-21 主人：关于页新增两页
         case .openSource:   OpenSourceView()
         case .credits:      CreditsView()
+        // 2026-11-22 主人：关于页新增「使用权限」
+        case .permissions:  PermissionsView()
         // 这一行在关于页里是 ShareLink，不会走到 push；留个安全落点
         case .share:        EncourageView()
         }
@@ -747,7 +762,8 @@ struct SettingsView: View {
                 }
                 .settingsCard()
 
-                Text("日志只在本机滚动保存，只有你点发送并确认后才会随邮件发出。")
+                // 🔴 2026-11-22 主人：保留隐私承诺，去掉「滚动保存 / 你点并确认」这类过程描述。
+                Text("日志只存本机，点发送才随邮件送出。")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -757,7 +773,7 @@ struct SettingsView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("反馈")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -773,7 +789,8 @@ struct SettingsView: View {
                 }
                 .settingsCard()
 
-                Text("无账号、无开发者服务器；取件数据默认只在本机，开启 iCloud 同步后只存进你自己的 iCloud。")
+                // 🔴 2026-11-22 主人：压成一句。无账号、无服务器本身就在标题「隐私」的语境里。
+                Text("数据只在本机；开了 iCloud 同步就只进你的 iCloud。")
                     .font(AppTheme.TypeScale.note)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -785,7 +802,7 @@ struct SettingsView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("隐私")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -887,12 +904,11 @@ struct SettingsView: View {
     }
 
     private var footer: some View {
+        // 🔴 2026-11-22 主人：上一句已经把「只在本机 / 只进自己 iCloud」说完，
+        //    页脚再说一遍就是重复，只留品牌行。
         VStack(spacing: 6) {
             Text("Codelumi")
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.tertiary)
-            Text("取件码默认只在本机；开启 iCloud 同步后也只在你自己的 iCloud 里")
-                .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
@@ -1047,7 +1063,7 @@ struct SubscriptionUnavailablePane: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("Codelumi Pro")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -1120,7 +1136,7 @@ struct FullVersionView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         // 截图脚手架：命令行点不了、也滚不动屏幕，`PAYWALL_ANCHOR=bottom`
         // 时直接落到页底，用来验「恢复购买 + 条款链接」这两行确实在。
         .onAppear {
@@ -1223,11 +1239,12 @@ struct FullVersionView: View {
             .background {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(on ? AppTheme.champagneLight.opacity(0.55)
-                              : Color(.secondarySystemGroupedBackground))
+                              : AppTheme.cardSurface)
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(on ? AppTheme.champagne : Color.clear, lineWidth: 2)
+                    // 深色下 champagne 是石墨，描边要用金色才看得出来
+                    .strokeBorder(on ? AppTheme.champagneInk : Color.clear, lineWidth: 1.5)
             }
             .overlay(alignment: .topTrailing) {
                 // 只靠描边颜色不够：截图、色弱、或渲染晚一帧都可能看错档位。
@@ -1315,8 +1332,8 @@ struct FullVersionView: View {
                 .font(AppTheme.TypeScale.body.weight(.semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
-                .background(canBuy ? AppTheme.champagne : Color(.tertiarySystemFill), in: .capsule)
-                .foregroundStyle(canBuy ? AppTheme.champagneInk : Color.secondary)
+                .background(canBuy ? AppTheme.ctaFill : Color(.tertiarySystemFill), in: .capsule)
+                .foregroundStyle(canBuy ? AppTheme.ctaInk : Color.secondary)
         }
         .buttonStyle(.plain)
         .disabled(!canBuy)
@@ -1354,7 +1371,9 @@ struct FullVersionView: View {
     private var finePrint: some View {
         VStack(alignment: .leading, spacing: 6) {
 
-
+            // ⚠️ 2026-11-22 老大：「无广告是好事，但也不用到处写，订阅页面底部的提示删除掉」。
+            //    这里原本放了一句「没有广告，也没有广告 SDK…」，已撤。
+            //    「无广告」现在只留在隐私政策与使用条款（法务口径该写），App 内不再重复推销。
             HStack(spacing: 12) {
                 Button("隐私政策") { legalSheet = .privacy }
                 Text("·").foregroundStyle(.tertiary)
@@ -1445,7 +1464,7 @@ struct AppLanguageView: View {
             .padding(.horizontal, AppTheme.hInset)
             .padding(.vertical, 18)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("语言")
         .navigationBarTitleDisplayMode(.inline)
     }

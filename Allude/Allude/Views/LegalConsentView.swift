@@ -44,7 +44,7 @@ struct LegalConsentView: View {
                            minHeight: proxy.size.height,
                            alignment: .center)
                 }
-                .background(Color(.systemGroupedBackground))
+                .background(AppTheme.pageBackground)
             }
             .safeAreaInset(edge: .bottom) { bottomBar }
             .toolbar(.hidden, for: .navigationBar)

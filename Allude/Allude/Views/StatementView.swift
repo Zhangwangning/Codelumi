@@ -71,7 +71,7 @@ struct StatementView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("声明与免责")
         .navigationBarTitleDisplayMode(.inline)
     }

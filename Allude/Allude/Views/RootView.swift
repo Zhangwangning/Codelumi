@@ -127,7 +127,7 @@ struct RootView: View {
 
     /// 底部菜单栏是否显示「统计」（外观与个性化里可关）。
     @AppStorage(TabBarPrefs.showsStatsKey,
-                store: UserDefaults(suiteName: PickupStorage.appGroupID))
+                store: PickupStorage.groupStore)
     private var showsStatsPreference = true
 
     /// 生效值；Debug 下可用 `ALLUDE_TAB_SHOWS_STATS=0` 强制关掉，方便截图验收。
@@ -303,12 +303,18 @@ struct RootView: View {
         // 那条是有意的导航语义，不受这里影响。
         // `.tabBarMinimizeBehavior` 是 iOS 26 新增；低版本没有这个行为，直接跳过。
         .modifier(TabBarMinimizeNever())
+        // 🔴 2026-11-23（老大：「关掉显示统计，得退出 App 再进来标签才消失」）：
+        //    `TabView` 里用 `if showsStats { ... }` 增删标签页，系统**不会**重建标签栏 ——
+        //    它把首次装配时的那组 tabItem 记住了。改值只让内容变，底部那排不动。
+        //    用 `.id(showsStats)` 把整棵子树换掉，才是"立刻就少一个标签"。
+        //    代价：切换时各页滚动位置重置 —— 相比"必须重启 App"这点代价可以接受。
+        .id(showsStats)
         .tint(AppTheme.accent)
         // 装配后接管系统 tabBar 引用（见 `TabBarCloak`），供显隐动画驱动。
         .background(NativeTabBarBridge())
         // 🔴 2026-11-15：整个窗口铺浅灰。iOS 26 的导航栏是玻璃材质，**取样背后的内容**；
         //    窗口默认是白，所以分栏左列顶部总有一条白。铺灰之后取样到灰，白块消失。
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppTheme.pageBackground.ignoresSafeArea())
         // 🔴 2026-11-14 主人定：iPad 要**底部标签栏**（像 Infuse / Scriptable 那样），
         // 不要系统顶部栏、也不要侧边栏。iPad 上把系统标签栏藏掉，自己画一条；
         // iPhone / Duo 外屏仍然用系统原生标签栏。
@@ -597,7 +603,7 @@ struct OnboardingView: View {
             .toolbar(.hidden, for: .navigationBar)
             .safeAreaInset(edge: .bottom) { bottomBar }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .onAppear {
             // 截图脚手架：ONBOARDING_PAGE=0/1/2 直接落到某一页
             if let raw = ProcessInfo.processInfo.environment["ONBOARDING_PAGE"],

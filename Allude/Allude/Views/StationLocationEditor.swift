@@ -66,7 +66,7 @@ struct StationLocationEditor: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("驿站位置")
         .navigationBarTitleDisplayMode(.inline)
         .cloaksTabBar()
@@ -189,7 +189,9 @@ struct StationLocationEditor: View {
 
             SettingsDivider(style: .plain)
 
-            SettingsPlainRow(title: "到达提醒") {
+            // 2026-11-22 主人：实验标记要挂在**这一行**的标题上，
+            // 不是孤零零摆在页面底部的说明旁边。
+            SettingsPlainRow(title: "到达提醒", isLab: true) {
                 Toggle("", isOn: $enabled)
                     .labelsHidden()
                     .tint(AppTheme.accent)
@@ -259,7 +261,9 @@ struct StationLocationEditor: View {
     }
 
     private var disclaimer: some View {
-        Text("实验室功能：系统围栏可能有几分钟延迟，低电量、离线或定位精度差时可能不触发。位置只存本机，用于判断你是否到达，不上传、不记录轨迹。")
+        // 2026-11-22 主人：「实验标记要挂在到达提醒的标题里」——
+        // 徽章已挪到上面那一行，这里只留代价与承诺，不再重复标记。
+        Text("系统围栏可能有几分钟延迟，低电量、离线或定位精度差时可能不触发。位置只存本机，用于判断你是否到达，不上传、不记录轨迹。")
             .font(AppTheme.TypeScale.note)
             .foregroundStyle(.tertiary)
             .frame(maxWidth: .infinity, alignment: .leading)

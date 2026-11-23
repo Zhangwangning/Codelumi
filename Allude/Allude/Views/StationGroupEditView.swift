@@ -140,7 +140,7 @@ struct StationGroupEditView: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle(groupID == nil ? "新建驿站组" : "编辑驿站组")
         .navigationBarTitleDisplayMode(.inline)
         .cloaksTabBar()
@@ -173,7 +173,8 @@ struct StationGroupEditView: View {
             Button("解散", role: .destructive) { deleteGroup() }
             Button("取消", role: .cancel) { }
         } message: {
-            Text("成员会恢复成独立驿站，历史记录与取件状态都不受影响。组自己的图标与位置会被清除。")
+            // 🔴 2026-11-22 主人：确认框只要说清「哪些会变、哪些不会」，不铺排。
+            Text("成员恢复为独立驿站，记录与取件状态不受影响；组的图标与位置会清除。")
         }
     }
 

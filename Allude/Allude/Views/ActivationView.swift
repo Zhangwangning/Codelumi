@@ -29,7 +29,7 @@ struct ActivationView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("激活")
         .navigationBarTitleDisplayMode(.inline)
         // 截图脚手架：命令行点不了输入框，`ACTIVATE_VOUCHER=<凭证>` 时

@@ -51,7 +51,7 @@ struct StationLocationPicker: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("选择位置")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

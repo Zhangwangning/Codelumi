@@ -49,7 +49,7 @@ struct UsageGuideView: View {
         // 🔴 2026-10-25：同 VersionHistoryView —— 底色用 ZStack 独立铺，
         // 不再依赖 ScrollView 上的 `.background`（分栏 detail 列里撑不满会露白）。
         ZStack {
-            Color(.systemGroupedBackground)
+            AppTheme.pageBackground
                 .ignoresSafeArea()
 
             ScrollView {
@@ -106,12 +106,14 @@ struct UsageGuideView: View {
 
     private var screenshotSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "截屏收件")
+            // 🔴 2026-11-22 主人：实验性统一用 `LabBadge` 标记 —— 标题里不再写
+            //    「是实验性功能」这几个字，徽章一眼就够；正文只留代价与例外。
+            SectionHeader(title: "截屏收件", isLab: true)
 
             // 🔴 2026-11-08 主人：截屏收件先一句话带过。
             //    原因：文字识别要靠端侧模型（国内机型暂不可用），只靠正则从截图里
             //    抽码并不可靠，写长了反而抬高预期。收码正路是上面的自动化。
-            Text("截图取码是实验性功能：识别效果依赖端侧模型，部分机型暂不支持，日常收码建议用上面的自动化。".richText)
+            Text("识别效果依赖端侧模型，部分机型暂不支持；日常收码还是用上面的自动化。".richText)
                 .font(AppTheme.TypeScale.body)
                 .foregroundStyle(.secondary)
                 .lineSpacing(4)

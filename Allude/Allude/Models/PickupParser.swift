@@ -895,49 +895,75 @@ private let stationBrandWords = [
     "快递超市", "韵达快递超市", "韵达超市", "圆通超市", "超市", "便利店", "驿站", "快递柜"
 ]
 
-/// 地址展示规整（B 方案）：`张掖市甘州区馨月湖小区南门兴裕隆超市` → `馨月湖小区南门兴裕隆超市`
-/// `菜鸟驿站甘州院子店（家佳福超市）店` → `家佳福超市甘州院子店`
+/// 地址展示规整：`张掖市甘州区馨月湖小区南门兴裕隆超市` → `馨月湖小区南门兴裕隆超市`
+/// `菜鸟驿站甘州院子店（家佳福超市）店站点` → `菜鸟驿站甘州院子店（家佳福超市）`
 func normalizeAddressText(_ raw: String) -> String {
     var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !s.isEmpty else { return s }
 
     // ① 去行政前缀：省 / 市 / 区县（「小区」「园区」「新区」「景区」「校区」不算）
     s = stripAdminPrefix(s)
-    // ② 括号别名前置：`<品牌><小区>店（<别名>）…` → `<别名><小区>店`
+
+    // ② 括号原样保留（2026-11-22 主人定，取代 2026-11-05 的「别名前置」）
+    //
+    // 老口径是「括号里的别名提到前面」：
+    // `菜鸟驿站甘州院子店（家佳福超市）店` → `家佳福超市甘州院子店`。
+    // 两个问题在真机上撞到一起：
+    //   · 读起来语义是反的 —— 「家佳福超市甘州院子店」像是家佳福超市的分店，
+    //     而原文说的是「菜鸟驿站甘州院子店，开在家佳福超市里」；
+    //   · `超市` 本身是驿站品牌词（`stationBrandWords`），别名一被判成"驿站名"就
+    //     整段丢弃，尾巴那个"店"再拼回去 —— 老大 2026-11-22 收到的
+    //     `甘州院子店店` 就是这么来的。
+    //
+    // 现在的口径：**括号不动、品牌前缀不动**，只清句式尾巴。
+    // `菜鸟驿站甘州院子店（家佳福超市）店站点` → `菜鸟驿站甘州院子店（家佳福超市）`
     if let open = s.firstIndex(where: { $0 == "（" || $0 == "(" }) {
         let closeChars: [Character] = ["）", ")"]
         if let close = s[open...].firstIndex(where: { closeChars.contains($0) }) {
             let alias = String(s[s.index(after: open)..<close])
-            var head = String(s[..<open])
+                .trimmingCharacters(in: .whitespaces)
+            let head = String(s[..<open]).trimmingCharacters(in: .whitespaces)
             var tail = String(s[s.index(after: close)...])
-            for brand in stationBrandWords where head.hasPrefix(brand) {
-                head.removeFirst(brand.count)
-                break
+                .replacingOccurrences(of: "站点", with: "")
+                .replacingOccurrences(of: "店面", with: "")
+                .trimmingCharacters(in: .whitespaces)
+
+            // 「…到XX店站点」的句式尾巴只剩一个"店"：
+            // 前半段已经以「店」或某个驿站品牌词（超市 / 便利店 / 驿站…）收尾时它是重复的，丢掉；
+            // 否则（`XX（别名）店` 本身就是店名的写法）留着。
+            let headLooksLikeStore = head.hasSuffix("店")
+                || stationBrandWords.contains { head.hasSuffix($0) }
+            if tail == "店", headLooksLikeStore {
+                tail = ""
             }
-            tail = tail.replacingOccurrences(of: "站点", with: "")
-                          .replacingOccurrences(of: "店面", with: "店")
-            head = head.trimmingCharacters(in: .whitespaces)
-            tail = tail.trimmingCharacters(in: .whitespaces)
-            // 🔴 2026-11-12 内测反馈：申通「已放到台州天台何方赵兔喜生活店(兔喜快递超市)」
-            // 括号里是**驿站名**（兔喜快递超市），不是地址别名；原来会把它前置成
-            // 「兔喜快递超市台州天台何方赵兔喜生活店」。这种括号直接丢掉。
-            let aliasIsBrand = stationBrandWords.contains { alias.contains($0) }
-            if aliasIsBrand {
-                s = (head + tail).trimmingCharacters(in: .whitespaces)
-            } else if !alias.isEmpty {
-                var merged = alias + head + tail
-                while merged.hasSuffix("店店") { merged.removeLast() }
-                merged = merged.replacingOccurrences(of: "店站点", with: "店")
-                if merged.count >= 2 { s = merged }
+
+            // 说明性括注（「（请前往自提）」「（超72小时收费）」）不是门店名，不进地址。
+            // 正常路径上正则的 lookahead 已经把它截掉了，这里只是兜底。
+            let noteWords = ["请", "超", "收取", "收费", "营业", "工作日", "自提",
+                             "免费", "凭", "超时", "逾期"]
+            let isNote = !alias.isEmpty && noteWords.contains { alias.hasPrefix($0) }
+
+            // 括号里是**行政地址**（「（甘肃省张掖市甘州区馨月湖南门）」）时也不进卡面：
+            // 卡上从来只显示"到哪取"的门店/小区，省市县对取件没有作用，留着只是把地址拖长。
+            let aliasIsAdmin = !alias.isEmpty && stripAdminPrefix(alias) != alias
+
+            if !alias.isEmpty, !isNote, !aliasIsAdmin {
+                // 括号统一用全角，跨短信观感一致（原文半角也归成全角）
+                s = head + "（" + alias + "）" + tail
+            } else {
+                s = head + tail
             }
         }
     }
 
-    // ②.5 括号合并后可能又带上了行政前缀（「甘肃省张掖市甘州区…」），再剥一次
+    // ②.5 括号处理后再剥一次行政前缀（个别短信把省市写在括号前面）
     s = stripAdminPrefix(s)
 
-    // ③ 去掉孤零零的「站点」尾巴
+    // ③ 句式尾巴：孤零零的「站点」、以及叠起来的「店店」
     s = s.replacingOccurrences(of: "店站点", with: "店")
+    // 🔴 2026-11-22：`甘州院子店店` 这种重复"店"无论从哪条分支漏出来，最后都在这里折掉一次。
+    //    只在结尾折（不动中间的「店」），最多两次，避免把「店店铺」这类正常店名越折越短。
+    for _ in 0..<2 where s.hasSuffix("店店") { s.removeLast() }
     return s.trimmingCharacters(in: .whitespaces)
 }
 

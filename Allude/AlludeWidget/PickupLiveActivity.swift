@@ -33,15 +33,32 @@ struct PickupLiveActivity: Widget {
             //    （卡片只剩一块空的液态玻璃，字全没了 —— 真机实证）。
             //    正确做法：玻璃贴在一个占位的透明层上，内容用 ZStack 叠在它上面。
             ZStack {
+                // 🔴 2026-11-23：卡片里不再自己铺底，深浅全由这一层玻璃决定。
+                //    给它一点点暗色 tint —— 浅壁纸上前景白字才立得住，
+                //    但仍然只有**一层**玻璃，不会看着像"卡里还有一张卡"。
+                // 玻璃 + 背板：背板放进 `.background`，不参与尺寸计算，
+                // 这样卡片大小完全由内容决定（否则模糊图会把卡撑成整块画布）。
                 Color.clear
-                    .appGlass(.rect(cornerRadius: 26))
+                    .appGlass(.rect(cornerRadius: 26), tint: nil)
+                    .background { backdrop(for: context.state.item) }
+                    .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
                 ActivityLockScreenCard(state: context.state)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 13)
+                    // 内容块到卡片四条边等距（2026-11-23 老大要求）。
+                    // 底部给 12 而不是 18：取件码是数字，行框底部自带 ~6pt 下伸空间，
+                    // 补成 18 会看着比顶部多一截。
+                    .padding(.horizontal, 18)
+                    .padding(.top, 22)
+                    .padding(.bottom, 18)
                     .zIndex(1)          // 明确压到玻璃之上，避免被玻璃层遮掉
             }
-            .activityBackgroundTint(.clear)
+            // 卡片按内容收紧：不写死高度，玻璃与内容同尺寸，四周留白才对得上
+            .fixedSize()
+            // 🔴 2026-11-23：`Glass.tint` 只是给玻璃上一层很淡的色，压不暗底色 ——
+            //    亮壁纸下白字依旧发灰。改由**系统**给活动本身铺一层暗色
+            //    （`activityBackgroundTint`），我们的玻璃叠在它上面取样，
+            //    整体变深，但仍然是"系统底 + 一层玻璃"，没有第二张卡片。
+            .activityBackgroundTint(Color.black.opacity(0.35))
             .activitySystemActionForegroundColor(islandInk(context.state.item.tint))
 
         } dynamicIsland: { context in
@@ -84,5 +101,25 @@ struct PickupLiveActivity: Widget {
             //    亮化后轮廓才真正可见。
             .keylineTint(islandTint(context.state.item.tint))
         }
+    }
+
+    /// 卡片背景：品牌图标放大 + 强模糊铺满整卡，再压一层暗色 ——
+    /// 这样白字在任何壁纸、任何外观下都有足够对比（老大：浅色/深色都要清晰可读）。
+    /// 这一层在**玻璃下面**，视觉上仍是"一张卡"，不是第二张卡片。
+    @ViewBuilder
+    private func backdrop(for item: PickupActivityAttributes.Item) -> some View {
+        ZStack {
+            CourierLogo(company: item.displayName, size: 320,
+                        showsShadow: false, usesStaticAsset: true)
+                .blur(radius: 30)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // 2026-11-23 老大选 B：压暗别太狠，让玻璃折射得出颜色。
+            // 上淡下深 —— 取件码那一行需要更多对比，图标行留出玻璃的通透感。
+            LinearGradient(colors: [Color.black.opacity(0.18), Color.black.opacity(0.34)],
+                           startPoint: .top, endPoint: .bottom)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .allowsHitTesting(false)
     }
 }

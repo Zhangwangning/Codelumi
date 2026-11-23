@@ -24,7 +24,7 @@ struct AppearancePersonalizationView: View {
 
     /// 底部菜单栏是否显示「统计」。放 App Group，主界面和本页读写同一份。
     @AppStorage(TabBarPrefs.showsStatsKey,
-                store: UserDefaults(suiteName: PickupStorage.appGroupID))
+                store: PickupStorage.groupStore)
     private var showsStats = true
 
     /// 「显示「统计」」属于 Codelumi Pro：非 Pro 点一下直接弹订阅页（2026-11-15 主人）。
@@ -37,7 +37,14 @@ struct AppearancePersonalizationView: View {
 
     /// 液态玻璃开关（2026-11-14 从「外观」页移过来）：仅 iOS 26+ 展示；
     /// 关闭后走系统毛玻璃材质，与 iOS 18 的观感一致。
-    @State private var usesLiquidGlass = GlassSettings.isEnabled
+    ///
+    /// 🔴 2026-11-23（老大：「液态玻璃开关最好也实时变化」）：
+    ///    原来是 `@State` + 手工 `setEnabled(...)` —— 值写进 App Group 了，
+    ///    但全 App 那些已经画好的玻璃卡片不会重算，得退出去再进来。
+    ///    改成 `@AppStorage` 绑同一个存储实例，再配 `GlassCompat` 里的
+    ///    `GlassShell`（它自己也观察这个键），拨完当场换材质。
+    @AppStorage(GlassSettings.key, store: PickupStorage.groupStore)
+    private var usesLiquidGlass = true
 
     var body: some View {
         ScrollView {
@@ -58,7 +65,6 @@ struct AppearancePersonalizationView: View {
                                 get: { usesLiquidGlass },
                                 set: { newValue in
                                     usesLiquidGlass = newValue
-                                    GlassSettings.setEnabled(newValue)
                                     DiagnosticsLog.record("appearance", "liquidGlass=\(newValue)")
                                 }
                             )) {
@@ -72,7 +78,8 @@ struct AppearancePersonalizationView: View {
                     }
                     .settingsCard()
 
-                    Text("关闭后改用系统毛玻璃材质，与 iOS 18 的观感一致。需重启 App 生效。")
+                    // 🔴 2026-11-22 主人：只留「需重启」这条猜不到的，其余删掉。
+                    Text("关闭后改用系统毛玻璃，需重启 App 生效。")
                         .font(AppTheme.TypeScale.note)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 4)
@@ -117,12 +124,8 @@ struct AppearancePersonalizationView: View {
                 }
                 .settingsCard()
 
-                Text("关掉后底部菜单栏只剩 待取 / 已取 / 设置。")
-                    .font(AppTheme.TypeScale.note)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                // 🔴 2026-11-22 主人：删掉「关掉后底部菜单栏只剩 待取 / 已取 / 设置。」
+                //    关掉开关底栏就少了那一项，用户当场看得见，不需要预告。
 
             }
             .padding(.horizontal, AppTheme.hInset)
@@ -131,7 +134,7 @@ struct AppearancePersonalizationView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("外观与个性化")
         .navigationBarTitleDisplayMode(.inline)
         // 非 Pro 点「显示「统计」」→ 订阅页；关掉时重判一次权益，
@@ -152,7 +155,7 @@ struct AppearancePersonalizationView: View {
     }
 
     /// 「推荐给朋友」是系统分享面板，不是 push（2026-11-21 主人从「鼓励一下」挪过来）
-    private static let shareText = "推荐 Codelumi：一个只在本机整理快递取件码的 App，不联网、不上传、不用注册。"
+    private static let shareText = SettingsPane.recommendText
 
     @ViewBuilder
     private func row(_ item: SettingsPane) -> some View {
@@ -262,7 +265,8 @@ struct StorageSpaceView: View {
                 .buttonStyle(.plain)
                 .settingsCard()
 
-                Text("默认只保存在这台设备上；开启 iCloud 同步后只存进你自己的 iCloud，不经过开发者服务器。")
+                // 🔴 2026-11-22 主人：隐私承诺保留，删掉「不经过开发者服务器」这种自证式补充。
+                Text("只在本机；开了 iCloud 同步就只进你的 iCloud。")
                     .font(AppTheme.TypeScale.note)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -276,7 +280,7 @@ struct StorageSpaceView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .destructiveConfirm(isPresented: $showClearAll,
                             title: "清除全部数据？",
                             message: "将删除这台设备上的 \(store.records.count) 条取件记录，无法恢复。",
@@ -315,7 +319,7 @@ struct AboutAlludeView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("关于 Codelumi")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -345,9 +349,20 @@ struct AboutAlludeView: View {
         .padding(.vertical, 8)
     }
 
+    /// ⚠️ 2026-11-22：这里曾经插过一张「四条事实卡」（离线 / 不收集 / 无广告 / 只存本机，
+    /// 搬自没有入口的 `AboutView`）。老大看图否掉：「关于Codelumi页面中不要上面的这些内容，
+    /// 多此一举，谁让你这么做的」—— 已撤。这一页只保留图标 + 名字 + 菜单列表。
+    /// 「无广告」这个卖点仍然在：付费页按钮下方、隐私政策、使用条款第 1 条。
+
     @ViewBuilder
     private func row(_ item: SettingsPane) -> some View {
-        if let openPane {
+        // 🔴 分享行必须是 ShareLink：它不推任何页面。
+        //    之前这里漏了分支，`.share` 走进 NavigationLink → destination 的 default
+        //    把它推到「版本历史」，老大一眼看出来不对。
+        if item == .share {
+            ShareLink(item: SettingsPane.recommendText) { label(item) }
+                .buttonStyle(.plain)
+        } else if let openPane {
             Button { openPane(item) } label: { label(item) }
                 .buttonStyle(.plain)
         } else {
@@ -385,7 +400,17 @@ struct AboutAlludeView: View {
         case .privacySimple: PrivacySimpleView()
         case .openSource:    OpenSourceView()
         case .credits:       CreditsView()
-        default:             VersionHistoryView()
+        case .permissions:   PermissionsView()
+        case .share:         EmptyView()   // 永远走 ShareLink，不进这里
+        case .version:       VersionHistoryView()
+        default:
+            // 🔴 别再写 `default: VersionHistoryView()` —— 那正是「推荐给朋友」
+            //    被推到版本历史的成因：没写 case 的项会静默落到某个真实页面。
+            //    现在缺 case 就给空视图 + DEBUG 断言，编译期看不出、跑起来立刻炸。
+            #if DEBUG
+            let _ = assertionFailure("AboutAlludeView 缺少 \(item.rawValue) 的落点")
+            #endif
+            EmptyView()
         }
     }
 }
@@ -406,7 +431,8 @@ struct EncourageView: View {
                         .foregroundStyle(AppTheme.pendingTint)
                         .padding(.top, 8)
 
-                    Text("如果 Codelumi 帮你少翻了几次短信、少漏了几件快递，就是它最想要的了。")
+                    // 🔴 2026-11-22 主人：「废话就删除」。原句绕了三层，压成一句。
+                    Text("用得顺手，给个评分。")
                         .font(AppTheme.TypeScale.body)
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.center)
@@ -435,7 +461,7 @@ struct EncourageView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("鼓励一下")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -468,7 +494,7 @@ struct PrivacySimpleView: View {
                     SettingsDivider()
 
                     SettingsRow(symbol: "camera.fill", title: "权限只在本机用",
-                                subtitle: "通知提醒、相册选图、拍照识别、到达提醒定位，处理全在设备上。",
+                                subtitle: "通知提醒、相册选图、拍照识别、到达提醒定位，处理全在设备上；每项都能在 App 里关掉。",
                                 showsChevron: false, tint: AppTheme.violet)
 
                     SettingsDivider()
@@ -502,7 +528,7 @@ struct PrivacySimpleView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("隐私政策（简明版）")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -534,7 +560,7 @@ struct ICloudSyncView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("iCloud 同步")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showHelp) {
@@ -689,14 +715,16 @@ struct ICloudSyncHelpView: View {
                     .foregroundStyle(.secondary)
                     .padding(.top, 8)
 
-                Text("同一件包裹在两台设备上都改过时，保留最后改动的那一份；删掉的记录不会从另一台设备「复活」。关掉开关后本机记录一条不少，iCloud 里那份会留着。")
+                // 🔴 2026-11-22 主人：去重。原句把「后改的赢」说了两遍，
+                //    并附送一句「关掉开关记录不少」—— 关掉开关不删数据是常识。
+                Text("同一件在两台设备上都改过，以后改的为准。")
                     .font(AppTheme.TypeScale.body)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("iCloud 同步说明")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

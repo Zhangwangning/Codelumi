@@ -40,7 +40,7 @@ struct ContactView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("联系方式")
         .navigationBarTitleDisplayMode(.inline)
         .alert("打不开链接", isPresented: $openFailed) {

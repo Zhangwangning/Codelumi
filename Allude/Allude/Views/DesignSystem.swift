@@ -53,7 +53,7 @@ struct CardSurface: ViewModifier {
                     // 改用 `secondarySystemGroupedBackground` —— 它就是
                     // 「分组列表里的卡片色」这条语义，浅色下为纯白，
                     // 深色下与 `.background.secondary` 同值，深色观感不变。
-                    .fill(Color(.secondarySystemGroupedBackground))
+                    .fill(AppTheme.cardSurface)
                     .overlay {
                         if let tint {
                             // 品牌色以对角线渐变铺在卡面上：左上角颜色最足、右下角褪去。
@@ -224,12 +224,12 @@ struct TicketPunchLine: View {
             .overlay {
                 HStack(spacing: 0) {
                     Circle()
-                        .fill(Color(.systemGroupedBackground))
+                        .fill(AppTheme.pageBackground)
                         .frame(width: punch, height: punch)
                         .offset(x: -punch / 2)
                     Spacer(minLength: 0)
                     Circle()
-                        .fill(Color(.systemGroupedBackground))
+                        .fill(AppTheme.pageBackground)
                         .frame(width: punch, height: punch)
                         .offset(x: punch / 2)
                 }
@@ -285,7 +285,6 @@ struct CourierGalleryView: View {
     /// 页面在 `onAppear` / 从编辑页返回时重读一次即可，多一层观察者反而容易出现
     /// 「两份内存状态谁覆盖谁」的回滚问题（小组件勾选那次踩过）。
     @State private var groups: [StationGroup] = []
-    @State private var innerOrder: StationInnerOrder = .newest
     /// 驿站管理搜索（2026-11-21）：34 个内置 + 自定义 + 组，滑两屏才找得到，
     /// 直接给一个搜索框比再加说明文字有用。
     @State private var query: String = ""
@@ -317,7 +316,6 @@ struct CourierGalleryView: View {
             }
             // 组与排序都在这里重读：从编辑页 pop 回来也会触发，建组 / 改组立刻可见
             groups = StationGroupStore.all()
-            innerOrder = StationInnerOrder.current
         }
     }
 
@@ -335,7 +333,6 @@ struct CourierGalleryView: View {
             // 2026-11-17 主人：「驿站管理里面再添加一个驿站内排序」。
             // 放在最上面 —— 它是常用设置，不该埋在几十个格子的下面。
             if scope == .station {
-                innerOrderCard
                 groupSection
             }
 
@@ -424,27 +421,10 @@ struct CourierGalleryView: View {
         .id(category.rawValue)
     }
 
-    // MARK: 驿站内排序（2026-11-17 主人）
-
-    private var innerOrderCard: some View {
-        // 🔴 2026-11-17 老大要求：说明文字整段去掉，只留标题 + 排序方式一行。
-        SettingsGroup(title: "驿站内排序") {
-            SettingsPlainRow(title: "排序方式") {
-                Menu {
-                    Picker("", selection: $innerOrder) {
-                        ForEach(StationInnerOrder.allCases) { order in
-                            Text(order.title.L).tag(order)
-                        }
-                    }
-                } label: {
-                    SettingsValueLabel(text: innerOrder.title)
-                }
-            }
-        }
-        .onChange(of: innerOrder) { _, newValue in
-            StationInnerOrder.set(newValue)
-        }
-    }
+    // MARK: 驿站内排序 —— 已删除（2026-11-23）
+    //
+    // 老大定：组内**永远按取件码 0-9、A-Z 升序**，不再提供四档设置。
+    // 少一个设置项，用户就不用去想"我上次选的是哪个"。
 
     // MARK: 驿站组（2026-11-17 主人）
     //
@@ -650,7 +630,9 @@ struct CourierGalleryView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
-        .settingsCard(radius: AppTheme.innerRadius)
+        // 🔴 2026-11-23 老大：「搜索框圆角和整体不兼容」——
+        //    原来用 innerRadius(14)，而周围卡片是 cardRadius(22)，摆在一起像两个体系。
+        .settingsCard(radius: AppTheme.cardRadius)
     }
 
     /// 搜索词是否命中（空查询全部命中）
@@ -872,6 +854,52 @@ struct StationLogo: View {
     }
 }
 
+// MARK: - 一条短信的图标（唯一入口）
+
+/// 「这条短信的图标」—— **全 App 唯一实现**。
+///
+/// 🔴 老大 2026-11-22 原话：「一条短信中，不管是待取卡、已取卡、详情页、分享卡、添加页、
+///    锁屏/灵动岛、小组件中，图标都必须遵循同一套规则，那就是图标就是当前显示在
+///    最前面的那一个（三个字段中谁在前面了，图标就显示谁的）」。
+///
+/// 规则本身只有一条，已经收在 `PickupNaming` 里：
+/// ```
+/// primary = 快递公司(courier) → 短信平台(company) → 快递驿站(station)
+/// iconSource = primary          // 恒等于第一段，不存在第二套
+/// ```
+/// 这个组件负责的是**画法**：第一段若是驿站就交给 `StationLogo`（能用用户上传的自定义图、
+/// 组驿站继承成员图），否则交给 `CourierLogo` 按品牌取图。
+///
+/// 以前这段 `if isStationPrimary { StationLogo } else { CourierLogo }` 在待取卡、已取卡、
+/// 详情页、分享卡里**各抄了四五遍**，添加页干脆漏了驿站分支 —— 于是同一个「自定义驿站」
+/// 在列表里画兜底箱子、在分享卡里画用户上传的图。抄写出现分歧只是时间问题，
+/// 所以收成这一个组件：以后要么调用它，要么就是 bug。
+///
+/// ⚠️ 跨进程边界（小组件 / 锁屏实时活动）：那里不能读 `StationDirectory`
+///    （依赖 `.standard` UserDefaults + App 沙盒里的 `StationIcons/` 图片），
+///    所以走 `CourierLogo(..., usesStaticAsset: true)` —— 取名口径仍是同一个 `primary`，
+///    内置驿站 / 快递公司的图标都能出图；只有「用户自己上传的自定义驿站图」跨进程取不到，
+///    会退到品牌兜底。这是平台限制，不是两套规则。
+struct PickupIcon: View {
+
+    let naming: PickupNaming
+    var size: CGFloat = 26
+    var showsShadow: Bool = true
+    /// 跨进程渲染（小组件 / 锁屏 / 灵动岛）时传 true —— 见上面的边界说明
+    var usesStaticAsset: Bool = false
+
+    var body: some View {
+        if naming.isStationPrimary, let station = naming.station, !usesStaticAsset {
+            StationLogo(name: station, size: size, showsShadow: showsShadow)
+        } else {
+            CourierLogo(company: naming.iconSource,
+                        size: size,
+                        showsShadow: showsShadow,
+                        usesStaticAsset: usesStaticAsset)
+        }
+    }
+}
+
 // MARK: - 复制取件码按钮（内容层实体着色，不叠玻璃）
 
 struct CopyCodeButton: View {
@@ -897,12 +925,34 @@ struct CopyCodeButton: View {
 
 // MARK: - 分组标题
 
+/// 「实验室」标记（2026-11-22 主人：「把所有实验室功能的都改成一样的标签来标记」）。
+///
+/// 🔴 **全 App 唯一真源**：文案、字号、配色、内边距都只在这里定义。
+///    任何页面要标"实验性"都必须用这一枚，不要再手写 `Text("实验室")` 或
+///    往标题里拼「实验室 · 」前缀 —— 那样三个地方会长出三种样子。
+///
+/// 用在：通知 › 到达提醒 / 使用教程 › 截屏收件 /
+///      驿站位置编辑页。凡 `SectionHeader(isLab: true)` 都是它。
+struct LabBadge: View {
+    var body: some View {
+        Text("实验室")
+            .font(AppTheme.TypeScale.badge)
+            .foregroundStyle(AppTheme.amber)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2.5)
+            .background(AppTheme.amber.opacity(0.15), in: .capsule)
+            .accessibilityLabel("实验室功能")
+    }
+}
+
 struct SectionHeader: View {
     let title: String
     var trailing: String? = nil
     /// 可选彩色前置图标：给分区一个颜色身份（标题本身仍保持次级灰，避免整屏都在喊）
     var symbol: String? = nil
     var tint: Color? = nil
+    /// 标题后面挂「实验室」徽章（统一标记，见 `LabBadge`）
+    var isLab: Bool = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -914,6 +964,9 @@ struct SectionHeader: View {
             Text(title.L)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
+            if isLab {
+                LabBadge()
+            }
             if let trailing {
                 Text(trailing.L)
                     .font(.caption)
@@ -1088,7 +1141,7 @@ struct SplitDetailPlaceholder: View {
             Text("从左侧列表点选一条，详情会显示在这一栏。")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
     }
 }
 
@@ -1124,7 +1177,7 @@ struct ProLockedSplitPlaceholder: View {
             .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
     }
 }
 

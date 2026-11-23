@@ -243,6 +243,19 @@ extension PickupParseResult {
 /// **可能对应多条**：一次粘贴常常就是好几条短信（从短信 App 多选复制），
 /// 一张截图里也常有 2–4 条。所以这里是「集合」而不是单一 case，
 /// 上层不必关心究竟写进去几条。
+/// 入库来源。只影响一件事：**要不要弹「入库提醒」通知**。
+///
+/// 🔴 2026-11-22 老大：「除了 App 内录入的取件码，其他入库的取件码信息都要推送通知」——
+///    App 内录入时用户正盯着屏幕、亲手点的保存，再弹一条横幅纯属打扰；
+///    而快捷指令、分享扩展这类**在自己看不见的地方**发生的入库，必须给回执，
+///    否则用户不知道到底进没进去。
+enum PickupIngestSource {
+    /// 用户正看着 App 自己录：文本录入 / 拍照 / 相册
+    case inApp
+    /// App 之外发生的入库：快捷指令（短信、截图）、分享扩展、URL 回调
+    case external
+}
+
 struct IngestOutcome: Equatable {
     struct Item: Equatable {
         let company: String
@@ -747,7 +760,7 @@ final class PickupStore: ObservableObject {
     /// 解析一段文本并写入。**支持一次多条**：粘贴多行短信、截图里有多条，
     /// 都会逐条解析、逐条落库；识别不出取件信息的段直接跳过，不影响其它条。
     @discardableResult
-    func ingest(_ text: String) -> IngestOutcome {
+    func ingest(_ text: String, source: PickupIngestSource = .external) -> IngestOutcome {
         let results = PickupParser.parseAll(text, ocrSource: false)
         // 只记「发生了什么」：来源、原文长度、解析出几条。**不记内容**。
         DiagnosticsLog.record("parse", "source=sms len=\(text.count) results=\(results.count)")
@@ -761,7 +774,7 @@ final class PickupStore: ObservableObject {
                                   + "conf=\(String(format: "%.2f", verdict.confidence)) "
                                   + "parsed=\(results.count)")
         }
-        return commitAll(results)
+        return commitAll(results, source: source)
     }
 
     /// OCR 来源的写入（拍照 / 相册 / 手动粘贴）。
@@ -770,10 +783,10 @@ final class PickupStore: ObservableObject {
     /// 换行，直接解析即可；OCR 的换行多来自视觉折行，会切断定长 lookbehind 锚点，
     /// 必须先归一。切段规则两者相同（都以「【」起头为新的一条）。
     @discardableResult
-    func ingestOCR(_ text: String) -> IngestOutcome {
+    func ingestOCR(_ text: String, source: PickupIngestSource = .external) -> IngestOutcome {
         let results = PickupParser.parseAll(text, ocrSource: true)
         DiagnosticsLog.record("parse", "source=ocr len=\(text.count) results=\(results.count)")
-        return commitAll(results)
+        return commitAll(results, source: source)
     }
 
     /// 落库：所有入口共用同一套合并策略（`PickupMerge`）与存储上限。
@@ -781,7 +794,8 @@ final class PickupStore: ObservableObject {
     /// 改动的是**一次性提交**：先把结果攒在局部数组里，最后整体赋值给 `records`。
     /// 若在循环里逐条 append，`records` 的 `didSet` 会触发 N 次 —— N 次写盘 +
     /// N 次请小组件重画，5 条短信就是 5 遍，纯属浪费。
-    private func commitAll(_ parsed: [PickupParseResult]) -> IngestOutcome {
+    private func commitAll(_ parsed: [PickupParseResult],
+                           source: PickupIngestSource = .external) -> IngestOutcome {
         // 🔴 地址记忆：用户改过的驿站地址，优先于本次解析结果（2026-11-05）
         let parsed = parsed.map { result -> PickupParseResult in
             var copy = result
@@ -842,7 +856,10 @@ final class PickupStore: ObservableObject {
         enforceStorageLimit()
         // 通知**只对新写入的发**：被自动完成的旧条再发一遍毫无价值。
         // 放在落库之后，确保用户点通知进来时记录已经在列表里。
-        PickupNotifier.notifyAdded(merged.added)
+        // App 内自己录的不弹通知（见 `PickupIngestSource` 的说明）
+        if source == .external {
+            PickupNotifier.notifyAdded(merged.added)
+        }
 
         // 🆕 端侧 AI 兜底（2026-10-28）：正则漏掉的字段，后台补。
         // ⚠️ 必须在 `records` 落库之后调用 —— 它要按 id 回写；

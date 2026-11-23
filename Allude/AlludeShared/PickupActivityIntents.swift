@@ -1,5 +1,6 @@
 import AppIntents
 import ActivityKit
+import WidgetKit
 import Foundation
 
 // MARK: ============================================================================
@@ -53,6 +54,40 @@ struct NextPickupIntent: LiveActivityIntent {
         IntentDebug.trace("next tapped; provider=\(PickupActivityController.pendingProvider != nil) "
                           + "activities=\(Activity<PickupActivityAttributes>.activities.count)")
         await PickupActivityController.cycle(offset: 1)
+        return .result()
+    }
+}
+
+/// 锁屏卡上「取件码右侧那个圆圈」：点一下把当前这件标记为已取。
+///
+/// 🔴 2026-11-23 老大：「取件码的右侧添加一个圆圈，点击可完成取件」。
+///    走的是和桌面小组件同一套「状态回滚日志」（`WidgetToggleJournal`）——
+///    扩展进程改不了主 App 的内存数据，只能往共享日志里记一笔，
+///    主 App 下次读盘时合并。这样锁屏上点一下，进 App 里就是已取状态。
+struct CompletePickupIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource { "标记为已取" }
+    static var description: IntentDescription {
+        IntentDescription("在锁屏实时活动里把当前取件码标记为已取。")
+    }
+
+    @Parameter(title: "记录")
+    var recordID: String
+
+    init() {}
+
+    init(recordID: String) {
+        self.recordID = recordID
+    }
+
+    func perform() async throws -> some IntentResult {
+        IntentDebug.trace("complete tapped id=\(recordID.prefix(8))")
+        if let id = UUID(uuidString: recordID) {
+            WidgetToggleJournal.append(id: id, picked: true, at: .now)
+        }
+        // 记完立刻按最新状态重算锁屏卡，用户不用等下一次刷新
+        let pending = PickupStorage.load().filter { !$0.isPickedUp }
+        PickupActivityController.sync(pending: pending)
+        WidgetCenter.shared.reloadAllTimelines()
         return .result()
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import UIKit
 
 // MARK: ============================================================================
@@ -60,6 +61,14 @@ final class HistoryModel: ObservableObject {
         }
     }
 
+    /// 排序方向翻转时 +1（同值重新赋值不触发 didSet，靠它强制重算）
+    @Published private(set) var orderRevision = 0
+
+    func bumpOrderRevision() {
+        orderRevision += 1
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     /// 「清空已取件记录」的确认态（2026-11-16 从待取页迁移过来）。
     /// 🔴 数据只在本机，删了 App 内**没有任何办法恢复**（没有云端备份、没有回收站），
     ///    所以这个动作必须先问一次（2026-11-01 主人要求）。
@@ -68,7 +77,7 @@ final class HistoryModel: ObservableObject {
     init() {
         let saved = PickupStorage.sharedDefaults.string(forKey: Self.sortKey)
             ?? UserDefaults.standard.string(forKey: Self.sortKey)
-        sort = saved.flatMap(PickupSortMode.init(rawValue:)) ?? .newest
+        sort = saved.flatMap(PickupSortMode.migrated) ?? .newest
     }
 
     /// 非 nil 时弹出分享预览面板（长按菜单「分享卡片」传单条）。
@@ -215,34 +224,9 @@ struct PickedUpView: View {
     }
 
     private func computedOrderedList() -> [PickupRecord] {
-        switch model.sort {
-        case .newest:
-            // `store.pickedUpRecords` 虽是收到时间倒序，但并列项次序不确定
-            // （批量导入的短信大量同秒）→ 这里显式补一次确定性兜底，与其余页面一致。
-            return searchedList.sorted {
-                $0.receivedAt == $1.receivedAt
-                    ? PickupSortLogic.tieBreak($0, $1)
-                    : $0.receivedAt > $1.receivedAt
-            }
-        case .oldest:
-            return searchedList.sorted {
-                $0.receivedAt == $1.receivedAt
-                    ? PickupSortLogic.tieBreak($0, $1)
-                    : $0.receivedAt < $1.receivedAt
-            }
-        case .company:
-            // 只负责把同一家聚到一起；组头由 `companyGroups` 出
-            return searchedList.sorted {
-                let a = groupingName(for: $0), b = groupingName(for: $1)
-                if a != b { return a < b }
-                if $0.receivedAt != $1.receivedAt { return $0.receivedAt > $1.receivedAt }
-                return PickupSortLogic.tieBreak($0, $1)
-            }
-        case .station:
-            // 2026-11-21：与待取页、桌面小组件同一套口径（件数多在前 → 同数按名字 →
-            // 未标注置底 → 组内按「驿站内排序」），不再单独按名字升序。
-            return PickupSortLogic.sort(searchedList, mode: .station)
-        }
+        // 🔴 2026-11-23：与待取页、桌面小组件、灵动岛、锁屏卡**同一个函数**。
+        //    时间键是 `receivedAt`（同一条再收到会刷新），组内永远按取件码升序。
+        PickupSortLogic.sort(searchedList, mode: model.sort.logic)
     }
 
     /// 搜索态**不裁条数**：主人 2026-11-16「可以搜索所有已完成取件的快递信息」。
@@ -286,11 +270,7 @@ struct PickedUpView: View {
             }
         }
         for index in buckets.indices {
-            buckets[index].items.sort {
-                $0.receivedAt == $1.receivedAt
-                    ? PickupSortLogic.tieBreak($0, $1)
-                    : $0.receivedAt > $1.receivedAt
-            }
+            buckets[index].items.sort { PickupSortLogic.tieBreak($0, $1) }
         }
         buckets.sort {
             $0.company == "其他" ? false
@@ -311,9 +291,8 @@ struct PickedUpView: View {
                 buckets.append((name, [record]))
             }
         }
-        let inner = StationInnerOrder.current
         for index in buckets.indices {
-            buckets[index].items.sort { inner.isOrderedBefore($0, $1) }
+            buckets[index].items.sort { PickupSortLogic.tieBreak($0, $1) }
         }
         buckets.sort {
             $0.station == "未标注驿站" ? false
@@ -350,7 +329,7 @@ struct PickedUpView: View {
     ///    所以这里补一张简要卡 —— 统计信息不该因为少一个标签页就消失。
     ///    与设置页读写同一个 App Group 键，开关一动立即生效（`@AppStorage` 跨页同步）。
     @AppStorage(TabBarPrefs.showsStatsKey,
-                store: UserDefaults(suiteName: PickupStorage.appGroupID))
+                store: PickupStorage.groupStore)
     private var showsStats = true
 
     /// 累计已取 —— 本页的**全部**已取记录（不受可见条数上限约束）。
@@ -401,6 +380,8 @@ struct PickedUpView: View {
 
     /// 当前打开侧滑的行（自绘侧滑，2026-10-25）
     @State private var openSwipeRow: UUID?
+    /// 排序面板（自己画的 popover，与待取页同一个 `SortMenuPanel`）
+    @State private var showSortPanel = false
 
     var body: some View {
         // 📱 2026-10-25：宽屏走平行视图（左列表 / 右详情），常规 iPhone 仍单栈。
@@ -412,7 +393,7 @@ struct PickedUpView: View {
                 stackedLayout
             }
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppTheme.pageBackground.ignoresSafeArea())
         .background {
             GeometryReader { geo in
                 Color.clear.preference(key: AlludePaneWidthKey.self, value: geo.size.width)
@@ -522,7 +503,7 @@ struct PickedUpView: View {
 
     private var listPane: some View {
         listBody
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .background(AppTheme.pageBackground.ignoresSafeArea())
     }
 
     private var listBody: some View {
@@ -542,7 +523,7 @@ struct PickedUpView: View {
                                        hint: "取件完成后，记录会留在这里")
                             .listRowInsets(EdgeInsets(top: 40, leading: AppTheme.hInset,
                                                       bottom: 0, trailing: AppTheme.hInset))
-                            .listRowBackground(Color(.systemGroupedBackground))
+                            .listRowBackground(AppTheme.pageBackground)
                             .listRowSeparator(.hidden)
                     }
                 } else if searchedList.isEmpty {
@@ -551,7 +532,7 @@ struct PickedUpView: View {
                         NoResultView(query: model.query)
                             .listRowInsets(EdgeInsets(top: 36, leading: AppTheme.hInset,
                                                       bottom: 0, trailing: AppTheme.hInset))
-                            .listRowBackground(Color(.systemGroupedBackground))
+                            .listRowBackground(AppTheme.pageBackground)
                             .listRowSeparator(.hidden)
                     }
                 } else {
@@ -574,7 +555,7 @@ struct PickedUpView: View {
                                           ])
                             .listRowInsets(EdgeInsets(top: 2, leading: AppTheme.hInset,
                                                       bottom: 12, trailing: AppTheme.hInset))
-                            .listRowBackground(Color(.systemGroupedBackground))
+                            .listRowBackground(AppTheme.pageBackground)
                             .listRowSeparator(.hidden)
                         }
                     }
@@ -590,7 +571,7 @@ struct PickedUpView: View {
                                               tint: CourierBrand.info(for: bucket.company).color)
                                     .listRowInsets(EdgeInsets(top: 2, leading: AppTheme.hInset,
                                                               bottom: 0, trailing: AppTheme.hInset))
-                                    .listRowBackground(Color(.systemGroupedBackground))
+                                    .listRowBackground(AppTheme.pageBackground)
                                     .listRowSeparator(.hidden)
 
                                 ForEach(rows(bucket.items)) { record in
@@ -607,7 +588,7 @@ struct PickedUpView: View {
                                               tint: AppTheme.accent)
                                     .listRowInsets(EdgeInsets(top: 2, leading: AppTheme.hInset,
                                                               bottom: 0, trailing: AppTheme.hInset))
-                                    .listRowBackground(Color(.systemGroupedBackground))
+                                    .listRowBackground(AppTheme.pageBackground)
                                     .listRowSeparator(.hidden)
 
                                 ForEach(rows(bucket.items)) { record in
@@ -622,7 +603,7 @@ struct PickedUpView: View {
                                               trailing: "\(section.items.count) 件")
                                     .listRowInsets(EdgeInsets(top: 2, leading: AppTheme.hInset,
                                                               bottom: 0, trailing: AppTheme.hInset))
-                                    .listRowBackground(Color(.systemGroupedBackground))
+                                    .listRowBackground(AppTheme.pageBackground)
                                     .listRowSeparator(.hidden)
 
                                 ForEach(rows(section.items)) { record in
@@ -637,7 +618,7 @@ struct PickedUpView: View {
                             HiddenHint(count: hiddenCount)
                                 .listRowInsets(EdgeInsets(top: 2, leading: AppTheme.hInset,
                                                           bottom: 8, trailing: AppTheme.hInset))
-                                .listRowBackground(Color(.systemGroupedBackground))
+                                .listRowBackground(AppTheme.pageBackground)
                                 .listRowSeparator(.hidden)
                         }
                     }
@@ -647,7 +628,7 @@ struct PickedUpView: View {
             .listSectionSpacing(AppTheme.listSpacing)
             .scrollContentBackground(.hidden)
             // 页面底 = 浅灰，卡片才是白（与全 App 统一口径）
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.pageBackground)
             .contentMargins(.bottom, 88, for: .scrollContent)
             // 复制回执（2026-10-25）：右滑直接复制后必须有提示，
             // 否则用户不知道复制上没有 —— 与待取页同款玻璃胶囊。
@@ -692,7 +673,7 @@ struct PickedUpView: View {
             // 📱 宽屏（iPhone Duo 展开态）内容限宽居中，与待取页同一口径
             .frame(maxWidth: splitPane ? .infinity : AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.pageBackground)
             // 搜索（2026-11-16 主人：已取页也要能搜，与待取页同款抽屉搜索）
             .modifier(SidebarSearchable(text: $model.query,
                                         enabled: !splitPane,
@@ -849,26 +830,31 @@ struct PickedUpView: View {
     /// （本页记录本来就全是已取），最后一项是「清空已取件记录」——
     /// 它清的就是本页的东西，入口在这儿才讲得通。
     private var groupMenu: some View {
-        Menu {
-            Picker("排序", selection: $model.sort) {
-                ForEach(PickupSortMode.allCases) { mode in
-                    Label(mode.rawValue, systemImage: mode.symbol).tag(mode)
-                }
-            }
-
-            if !list.isEmpty {
-                Divider()
-                Button(role: .destructive) {
-                    model.confirmClearPicked = true
-                } label: {
-                    Label("清空已取件记录", systemImage: "trash")
-                }
-                .tint(.red)
-            }
+        Button {
+            showSortPanel = true
         } label: {
             Image(systemName: "line.3.horizontal.decrease.circle")
         }
         .accessibilityLabel("分组与排序")
+        .popover(isPresented: $showSortPanel, arrowEdge: .top) {
+            SortMenuPanel(
+                current: model.sort,
+                onPick: { choice in
+                    choice.apply()
+                    model.sort = choice.mode
+                    model.bumpOrderRevision()
+                    showSortPanel = false
+                },
+                extraAction: list.isEmpty
+                    ? nil
+                    : (title: "清空已取件记录", isDestructive: true,
+                       action: {
+                           model.confirmClearPicked = true
+                           showSortPanel = false
+                       })
+            )
+            .presentationCompactAdaptation(.popover)
+        }
     }
 
     // MARK: 记录行
@@ -931,7 +917,7 @@ struct PickedUpView: View {
         // 编辑模式下完全不挂长按手势（`enabled: false`）
         .cardLongPress(for: record.id, state: cardMenu, enabled: !model.isEditing)
         // 🔴 行背景 / 分隔符 / insets 必须是链尾（写在前面会落到内层容器失效）。
-        .listRowBackground(Color(.systemGroupedBackground))
+        .listRowBackground(AppTheme.pageBackground)
         .listRowSeparator(.hidden)
         // 上下各 7.5pt = 卡片间实距 15pt，与待取页同口径。
         .listRowInsets(EdgeInsets(top: 2, leading: AppTheme.hInset,
@@ -1142,7 +1128,7 @@ struct StatsTabView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 110)
                 }
-                .background(Color(.systemGroupedBackground))
+                .background(AppTheme.pageBackground)
                 .onAppear {
                     scrollFromScaffold(proxy)
                     TabBarCloak.shared.reveal()
@@ -1352,16 +1338,9 @@ struct HistoryRow: View {
 
     /// 码行左侧品牌图标（26pt，底部与取件码持平）
     private var logoBlock: some View {
-        Group {
-            // 只有「主名本身就是驿站」这一种极端情况（courier 与 company 都空）才用驿站图标；
-            // 其余一律按主名取品牌色 —— 与「图标 = 第一行第一个字段」一致。
-            if naming.isStationPrimary, let stationName = naming.station {
-                StationLogo(name: stationName, size: Self.iconSize)
-            } else {
-                CourierLogo(company: titleIconSource, size: Self.iconSize)
-            }
-        }
-        .frame(width: Self.iconSize, height: Self.iconSize)
+        // 图标 = 卡面第一段（快递公司 > 短信平台 > 驿站），画法统一在 `PickupIcon`。
+        PickupIcon(naming: naming, size: Self.iconSize)
+            .frame(width: Self.iconSize, height: Self.iconSize)
     }
 
     var body: some View {

@@ -84,7 +84,7 @@ struct StationEditView: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle(isEdit ? "编辑驿站" : "添加驿站")
         .navigationBarTitleDisplayMode(.inline)
         .cloaksTabBar()
@@ -406,7 +406,7 @@ struct StationAddDialog: View {
         //    用系统厚材质打底 + 细描边 + 阴影，观感与系统 alert 一致。
         .background {
             RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
+                .fill(AppTheme.cardSurface)
         }
         .overlay {
             RoundedRectangle(cornerRadius: 30, style: .continuous)

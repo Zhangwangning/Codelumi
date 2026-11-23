@@ -57,8 +57,8 @@ struct OpenSourceView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("开源项目")
+        .background(AppTheme.pageBackground)
+        .navigationTitle("开源项目信息")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -76,9 +76,14 @@ struct OpenSourceView: View {
 
             Spacer(minLength: 8)
 
-            Image(systemName: "arrow.up.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.tertiary)
+            // 🔴 2026-11-22 主人：跳转箭头改成 **Apple 蓝色文字「进一步了解」**。
+            //    箭头只说明「能点」，一句话才说明「点进去看什么」。
+            //    蓝色用系统语义色 `Color.blue`（#007AFF），不用 `AppTheme.accent`。
+            Text("进一步了解")
+                .font(AppTheme.TypeScale.bodyMedium)
+                .foregroundStyle(Color.blue)
+                .lineLimit(1)
+                .layoutPriority(1)
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 14)
@@ -125,7 +130,7 @@ struct CreditsView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("特别鸣谢")
         .navigationBarTitleDisplayMode(.inline)
     }

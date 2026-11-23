@@ -57,6 +57,36 @@ struct AIPickupFields: Sendable {
     var address: String
 }
 
+/// 「打开 Apple 智能」用户开关（2026-11-22 主人要求放进 Apple 智能页）。
+///
+/// 与 `PickupAI.isAvailable`（系统事实）分开：
+///   · `isAvailable` —— 这台 iPhone 到底给不给用，App 改不了；
+///   · `isEnabled`   —— 用户**愿不愿意**用。默认开（改造前就是这个行为），
+///     关掉之后所有端侧调用直接跳过，只剩正则，功能不受影响。
+///
+/// 为什么存 App Group：解析跑在主 App，但同一份偏好以后可能被扩展读到
+/// （例如小组件将来要展示"增强已关闭"），跨进程一致比省一个 domain 更重要。
+///
+/// ⚠️ 2026-11-22 语音录入整块删除（老大：「先直接关闭吧，目前基本上没有大模型无法使用的」）：
+///    原 `VoiceEntryStyle` / `VoiceSettings` / `voiceKey` / `voiceEntryKey` /
+///    `resetVoiceOffOnceIfNeeded` 全部移除，`AISettings` 只剩这一个总开关。
+enum AISettings {
+    static let enabledKey = "allude.ai.enabled"
+
+    private static var store: UserDefaults {
+        UserDefaults(suiteName: PickupStorage.appGroupID) ?? .standard
+    }
+
+    /// 「打开 Apple 智能」总开关。默认 **true** —— 升级用户不该因为新增开关而静默降级。
+    static var isEnabled: Bool {
+        store.object(forKey: enabledKey) as? Bool ?? true
+    }
+
+    static func setEnabled(_ value: Bool) {
+        store.set(value, forKey: enabledKey)
+    }
+}
+
 @available(iOS 26.0, *)
 enum PickupAI {
 
@@ -84,13 +114,20 @@ enum PickupAI {
         return false
     }
 
+    /// 实际会不会真的去调模型 = 系统给用 **且** 用户没关开关。
+    ///
+    /// 2026-11-22：Apple 智能页加了「打开 Apple 智能」总开关，
+    /// 判断「要不要发起端侧调用」的地方一律改用它 —— `isAvailable` 只表示硬件/系统的态度，
+    /// 拿它当"要不要跑"会让关掉开关的用户继续被调用。
+    static var isActive: Bool { isAvailable && AISettings.isEnabled }
+
     /// 从一条短信里抽字段。返回 nil = 不可用 / 超时 / 模型拒绝，调用方直接放弃。
     ///
     /// - Parameter timeout: 端侧模型首次调用要加载权重，默认给 8 秒；
     ///   超时宁可不要结果，也不能让解析任务一直挂着。
     static func extract(from text: String,
                         timeout: Duration = .seconds(8)) async -> AIPickupFields? {
-        guard isAvailable else { return nil }
+        guard isActive else { return nil }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
@@ -181,7 +218,7 @@ enum PickupAIEnhancer {
 
     /// 新入库的记录排一轮后台补全（由 `commitAll` 调用）
     static func schedule(_ records: [PickupRecord]) {
-        guard PickupAI.isAvailable else { return }
+        guard PickupAI.isActive else { return }
         let targets = records.filter(needsHelp)
         guard !targets.isEmpty else { return }
 

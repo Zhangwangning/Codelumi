@@ -105,7 +105,8 @@ struct HelpCenterView: View {
                     .buttonStyle(.plain)
                 }
                 .settingsCard()
-                Text("诊断日志只在本机保存，只有你点发送并确认后才会随邮件发出。")
+                // 🔴 2026-11-22 主人：与「反馈」页同一句，去掉过程描述。
+                Text("日志只存本机，点发送才随邮件送出。")
                     .font(AppTheme.TypeScale.note)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -117,7 +118,7 @@ struct HelpCenterView: View {
             .frame(maxWidth: AppTheme.contentMaxWidth)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("帮助与反馈")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $feedback.showComposer) {
@@ -173,131 +174,9 @@ struct HelpCenterView: View {
     }
 }
 
-// MARK: - 关于
-
-struct AboutView: View {
-    @EnvironmentObject private var store: PickupStore
-
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                header
-
-                offlineCard
-
-                VStack(spacing: 0) {
-                    legalRow(title: "隐私政策",
-                             document: .privacy,
-                             symbol: "hand.raised.fill",
-                             tint: AppTheme.doneTint)
-
-                    SettingsDivider()
-
-                    legalRow(title: "使用条款",
-                             document: .terms,
-                             symbol: "doc.text.fill",
-                             tint: AppTheme.sky)
-                }
-                .settingsCard()
-
-                // 🔴 2026-11-08 主人：数据只留一个入口 —— 设置 › 本机数据 › 存储。
-                //    关于页不再重复「已存记录 / 数据文件」（同一份数据两个入口）。
-
-                VStack(spacing: 0) {
-                    NavigationLink {
-                        VersionHistoryView()
-                    } label: {
-                        SettingsRow(symbol: "clock.arrow.circlepath", title: "版本历史",
-                                    tint: AppTheme.amber)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .settingsCard()
-
-                VStack(spacing: 0) {
-                    NavigationLink {
-                        StatementView()
-                    } label: {
-                        SettingsRow(symbol: "text.document.fill", title: "声明与免责",
-                                    tint: AppTheme.amber)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .settingsCard()
-            }
-            .padding(.horizontal, AppTheme.hInset)
-            .padding(.top, 12)
-            .padding(.bottom, 40)
-            .frame(maxWidth: AppTheme.contentMaxWidth)
-            .frame(maxWidth: .infinity)
-        }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("关于")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    /// 顶部标识：名称 + 版本号。参考图里这一块都是居中的图标 + 名字 + 版本。
-    // MARK: 软件说明（2026-11-07 主人要求写清楚）
-
-    /// 四条事实直接摆在页面上（不再有独立的「软件说明」二级页）。
-    /// 🔴 2026-11-07 主人：不要把同样几句话在两处各写一遍（之前四行与二级页完全重复）。
-    private var offlineCard: some View {
-        VStack(spacing: 0) {
-            // 🔴 2026-11-08 主人：软件说明不必再单独一页 —— 这几条就是「关于」
-            //    最该第一眼看到的事实，直接摆在页面上，少一层点击。
-            SettingsRow(symbol: "wifi.slash", title: "纯离线运行，不联网",
-                        showsChevron: false, tint: AppTheme.doneTint)
-            SettingsDivider()
-            SettingsRow(symbol: "hand.raised.fill", title: "不获取任何用户数据",
-                        showsChevron: false, tint: AppTheme.sky)
-            SettingsDivider()
-            SettingsRow(symbol: "internaldrive.fill", title: "数据只存在本机",
-                        showsChevron: false, tint: AppTheme.todayTint)
-            SettingsDivider()
-            SettingsRow(symbol: "iphone", title: "最低系统版本",
-                        detail: Self.minimumOS,
-                        showsChevron: false, tint: AppTheme.violet)
-        }
-        .settingsCard()
-    }
-
-    /// 与工程 `IPHONEOS_DEPLOYMENT_TARGET` 保持一致（改部署目标时同步这里）
-    static let minimumOS = "iOS 17.0"
-
-    private var header: some View {
-        VStack(spacing: 8) {
-            // 2026-10-31 主人：关于页顶部用 App 自己的 logo（已去掉白底）。
-            // 图标本身带圆角，这里不再叠圆角遮罩，免得边缘出现双重圆角。
-            // 图标资源是 1024 的满幅方图（App Store 要求无透明、无自带圆角），
-            // App 内要模仿系统图标的样子，这里按 iOS 的比例裁连续圆角：22.37%。
-            Image(AppIconStore.current.assetName)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 78, height: 78)
-                .clipShape(.rect(cornerRadius: 78 * 0.2237, style: .continuous))
-
-            Text("Codelumi")
-                .font(AppTheme.TypeScale.rowTitle.weight(.semibold))
-
-            Text(AppVersion.display.L)
-                .font(AppTheme.TypeScale.note)
-                .foregroundStyle(.tertiary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-    }
-
-    private func legalRow(title: String, document: LegalDocument,
-                          symbol: String, tint: Color) -> some View {
-        NavigationLink {
-            LegalDocumentView(document: document)
-        } label: {
-            SettingsRow(symbol: symbol, title: title, tint: tint)
-        }
-        .buttonStyle(.plain)
-    }
-
-}
+// ⚠️ 2026-11-22：原 `AboutView`（四条事实卡 + 隐私/条款 + 版本历史 + 声明）整段删除 ——
+//    它没有任何入口（`case "about"` 早已指向「关于 Codelumi」菜单页），
+//    内容（尤其「没有广告」那一行）已搬进 `AboutAlludeView`，避免同一段话两处各写一遍。
 
 // MARK: - 二级页共用页脚
 

@@ -18,9 +18,10 @@ enum GlassSettings {
     /// App Group 键：是否使用液态玻璃（外观设置项）
     static let key = "allude.usesLiquidGlass"
 
-    private static var defaults: UserDefaults {
-        UserDefaults(suiteName: PickupStorage.appGroupID) ?? .standard
-    }
+    /// 🔴 2026-11-23：必须用全 App 唯一的那个实例 ——
+    ///    `UserDefaults(suiteName:)` 每调一次是新对象，写入不会通知绑在别处的
+    ///    `@AppStorage`（"拨了开关界面不动"的老病根）。
+    private static var defaults: UserDefaults { PickupStorage.groupStore }
 
     /// 当前系统是否支持液态玻璃（iOS 26+）
     static var isSupported: Bool {
@@ -40,28 +41,41 @@ enum GlassSettings {
     static var isActive: Bool { isSupported && isEnabled }
 }
 
-extension View {
-    /// 统一玻璃外壳：支持则液态玻璃，否则系统毛玻璃。
-    /// - Parameters:
-    ///   - shape: 玻璃形状（`.rect(cornerRadius:)` / `.capsule` / `.circle`）
-    ///   - tint: 可选染色（液态玻璃下生效；毛玻璃下用同色极淡叠层近似）
-    ///   - interactive: 是否要按下形变（仅液态玻璃支持）
-    @ViewBuilder
-    func appGlass<S: Shape>(_ shape: S,
-                            tint: Color? = nil,
-                            interactive: Bool = false) -> some View {
-        if #available(iOS 26.0, *), GlassSettings.isActive {
+/// 真正的材质外壳。
+///
+/// 🔴 2026-11-23（老大：「液态玻璃的开关也实时变化」）：
+///    材质分支不能写在**调用方**的 ViewBuilder 里 —— 调用方不重算，
+///    拨开关就永远看不到变化。把这个决策关进一个自己观察 `allude.usesLiquidGlass`
+///    的视图里，键一变它当场重画，已经铺满全 App 的玻璃卡片跟着换。
+private struct GlassShell<S: Shape, Content: View>: View {
+    @AppStorage(GlassSettings.key, store: PickupStorage.groupStore)
+    private var enabled = true
+
+    let shape: S
+    let tint: Color?
+    let interactive: Bool
+    let content: Content
+
+    init(shape: S, tint: Color?, interactive: Bool, @ViewBuilder content: () -> Content) {
+        self.shape = shape
+        self.tint = tint
+        self.interactive = interactive
+        self.content = content()
+    }
+
+    var body: some View {
+        if #available(iOS 26.0, *), enabled {
             let base = Glass.regular
             let tinted = tint.map { base.tint($0) } ?? base
             let final = interactive ? tinted.interactive() : tinted
-            self.glassEffect(final, in: shape)
+            content.glassEffect(final, in: shape)
         } else {
             // 🔴 2026-11-08 iOS 18 实测：tint 必须画在**内容下方**。
             //    早先写成 `.overlay { shape.fill(tint) }`，会把按钮文字盖住
             //    （详情页「标记为已取」的字直接看不见）。
             //    tint 自带 alpha（调用点传 0.65），叠两层把有效不透明度抬到 ~0.88，
             //    观感才贴近液态玻璃的实心感，白字对比也够。
-            self
+            content
                 .background {
                     ZStack {
                         shape.fill(.ultraThinMaterial)
@@ -76,6 +90,19 @@ extension View {
                     shape.stroke(.white.opacity(0.16), lineWidth: 0.5)
                 }
         }
+    }
+}
+
+extension View {
+    /// 统一玻璃外壳：支持则液态玻璃，否则系统毛玻璃。
+    /// - Parameters:
+    ///   - shape: 玻璃形状（`.rect(cornerRadius:)` / `.capsule` / `.circle`）
+    ///   - tint: 可选染色（液态玻璃下生效；毛玻璃下用同色极淡叠层近似）
+    ///   - interactive: 是否要按下形变（仅液态玻璃支持）
+    func appGlass<S: Shape>(_ shape: S,
+                            tint: Color? = nil,
+                            interactive: Bool = false) -> some View {
+        GlassShell(shape: shape, tint: tint, interactive: interactive) { self }
     }
 }
 

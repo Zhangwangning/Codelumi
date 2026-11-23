@@ -47,6 +47,24 @@ enum PickupNotifier {
         set { UserDefaults.standard.set(newValue, forKey: enabledKey) }
     }
 
+    // MARK: 权限闸门（2026-11-22，「关于 › 使用权限」）
+
+    /// 用户**允许 App 用通知**吗。
+    ///
+    /// 语义比 `isEnabled` 高一层：`isEnabled` 管「添加后要不要弹一条」，
+    /// 这里管「整个 App 允不允许用通知」。关掉后不再申请、不再排期、不再发送。
+    static var isPermitted: Bool { PermGate.storedIsOn(.notifications) }
+
+    /// 关掉通知权限时的收尾：把本 App 待发与已发的通知全部清掉。
+    ///
+    /// 🔴 只加 guard 不清场是不够的 —— 用户昨天排好的「超时未取」还会照常响，
+    ///    关开关等于没关。
+    static func suspendAll() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        center.removeAllDeliveredNotifications()
+    }
+
     // MARK: 文案映射（纯函数，可被自检脚本直接调用）
 
     /// 取件平台与取件地址之间的分隔符。**英文管道符**（主人指定）。
@@ -98,7 +116,7 @@ enum PickupNotifier {
     /// 弹出来只会被随手拒掉。调用点放在「看到待取件列表之后」（`PickupListView.onAppear`）
     /// 与设置页打开开关时。
     static func requestAuthorizationIfNeeded() {
-        guard isEnabled else { return }
+        guard isEnabled, isPermitted else { return }
         // 截图脚手架：`SIMCTL_CHILD_SKIP_PERM=1` 一律不弹系统授权。
         // 以前只在 `PickupListView` 的调用点判断，可是首帧会先渲染待取页
         // （之后才按 `SCREEN=` 跳走），于是拍设置页时弹窗照样糊在屏幕上、
@@ -136,7 +154,14 @@ enum PickupNotifier {
     /// 只在**真的新写入**时调用；被去重拦下的不发（否则用户会收到一条
     /// 「又收到一个已经存在的码」的通知，毫无价值）。
     static func notifyAdded(_ records: [PickupRecord]) {
-        guard isEnabled, !records.isEmpty else { return }
+        guard isEnabled, isPermitted, !records.isEmpty else {
+            // 记一行「为什么没发」：排查「外部入库没收到通知」时，
+            // 先看这里就知道是开关、权限，还是压根没调用（App 内录入不会调到这）。
+            DiagnosticsLog.record("notify",
+                                  "skip added=\(records.count) enabled=\(isEnabled) permitted=\(isPermitted)")
+            return
+        }
+        DiagnosticsLog.record("notify", "added=\(records.count)")
 
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
@@ -290,7 +315,7 @@ enum PickupNotifier {
     /// 文案里「还有 N 件」是注册那一刻的快照，只有勤重排才能跟上数据。
     static func rescheduleDailyReminder() {
         let center = UNUserNotificationCenter.current()
-        guard isDailyReminderEnabled else {
+        guard isDailyReminderEnabled, isPermitted else {
             center.removePendingNotificationRequests(withIdentifiers: [dailyReminderID])
             return
         }
@@ -341,7 +366,7 @@ enum PickupNotifier {
         let center = UNUserNotificationCenter.current()
         let defaults = UserDefaults.standard
         // 与超时提醒同属 Codelumi Pro；降级后下一次数据变化/回前台就撤干净
-        guard isRepeatReminderEnabled, EntitlementSnapshot.licensedPro else {
+        guard isPermitted, isRepeatReminderEnabled, EntitlementSnapshot.licensedPro else {
             center.removePendingNotificationRequests(withIdentifiers: [repeatReminderID])
             defaults.removeObject(forKey: repeatSignatureKey)
             return
@@ -389,7 +414,7 @@ enum PickupNotifier {
     static func schedulePendingReminder(for record: PickupRecord) {
         // 超时未取提醒是 **Codelumi Pro** 功能（2026-11-08 主人定）：
         // 非 Pro 一律不排期，并把已排的全部撤掉（降级后下一次进前台就清干净）。
-        guard isPendingReminderEnabled, EntitlementSnapshot.licensedPro else { return }
+        guard isPermitted, isPendingReminderEnabled, EntitlementSnapshot.licensedPro else { return }
         let hours = pendingReminderHours
         let content = UNMutableNotificationContent()
         content.title = "\(record.code) 还没取"
@@ -425,7 +450,7 @@ enum PickupNotifier {
         let center = UNUserNotificationCenter.current()
         // 超时未取提醒是 **Codelumi Pro** 功能（2026-11-08 主人定）：
         // 非 Pro 一律不排期，并把已排的全部撤掉（降级后下一次进前台就清干净）。
-        guard isPendingReminderEnabled, EntitlementSnapshot.licensedPro else {
+        guard isPermitted, isPendingReminderEnabled, EntitlementSnapshot.licensedPro else {
             center.getPendingNotificationRequests { requests in
                 let ids = requests.map(\.identifier).filter { $0.hasPrefix(pickupReminderPrefix) }
                 center.removePendingNotificationRequests(withIdentifiers: ids)

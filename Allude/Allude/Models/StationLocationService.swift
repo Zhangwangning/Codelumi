@@ -156,6 +156,10 @@ final class StationLocationService: NSObject, ObservableObject, CLLocationManage
         // 🔴 老大 2026-11-16 补充：到达提醒是 Codelumi Pro 功能。
         //    降级 / 权益过期 / 关开关 / 权限不是 Always，一律把围栏全撤干净。
         guard EntitlementSnapshot.licensedPro,
+              // 2026-11-22：「关于 › 使用权限」里关掉定位 → 围栏全撤，不再用定位。
+              // 放在这里而不是 `isArrivalReminderEnabled` 的 getter 里，是因为设置页的
+              // 开关要如实反映用户自己拨的状态；"用不用"是执行层的判断。
+              PermGate.storedIsOn(.location),
               Self.isArrivalReminderEnabled,
               manager.authorizationStatus == .authorizedAlways else { return }
 

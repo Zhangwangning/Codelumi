@@ -28,7 +28,7 @@ struct TrainingDataView: View {
             .padding(.horizontal, AppTheme.hInset)
             .padding(.vertical, 16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("帮助改进Codelumi")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -71,7 +71,8 @@ struct TrainingDataView: View {
                 Image(systemName: "exclamationmark.shield.fill")
                     .font(AppTheme.TypeScale.body.weight(.semibold))
                     .foregroundStyle(AppTheme.pendingTint)
-                Text("导出前请先看这一段")
+                // 🔴 2026-11-22 主人：标题只说到「这是导出内容」，下面四条是实质条款，不动。
+                Text("导出内容")
                     .font(AppTheme.TypeScale.rowTitleMedium)
             }
             Text("· 导出内容 = 你手动添加的短信样本 + App 诊断日志，仅此两项。\n"
@@ -265,7 +266,7 @@ struct TrainingSampleComposer: View {
                 .padding(.horizontal, AppTheme.hInset)
                 .padding(.vertical, 16)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.pageBackground)
             .navigationTitle(isEditing ? "编辑样本" : "添加样本")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -495,7 +496,7 @@ struct TrainingRecordPickerView: View {
                 .padding(.horizontal, AppTheme.hInset)
                 .padding(.vertical, 16)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.pageBackground)
             .navigationTitle("选择一条短信")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

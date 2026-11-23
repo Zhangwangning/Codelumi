@@ -50,14 +50,13 @@ struct AppearanceSettingsView: View {
                             withAnimation(.snappy(duration: 0.22)) { settings.mode = mode }
                         } label: {
                             HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(mode.title.L)
-                                        .font(AppTheme.TypeScale.rowTitle)
-                                        .foregroundStyle(.primary)
-                                    Text(mode.detail.L)
-                                        .font(AppTheme.TypeScale.rowSubtitle)
-                                        .foregroundStyle(.secondary)
-                                }
+                                // 🔴 2026-11-22 主人：「标题清晰的就不要提示」。
+                                //    原来每行带副标题（自动 / 跟随系统设置、浅色 / 始终使用浅色…），
+                                //    后一句只是把前一句换个说法，一并删掉。
+                                Text(mode.title.L)
+                                    .font(AppTheme.TypeScale.rowTitle)
+                                    .foregroundStyle(.primary)
+
                                 Spacer(minLength: 0)
                                 if settings.mode == mode {
                                     Image(systemName: "checkmark")
@@ -78,15 +77,13 @@ struct AppearanceSettingsView: View {
                 }
                 .settingsCard()
 
-                Text("「自动」跟随系统的深浅色设置；选「浅色」或「深色」后，本 App 不再随系统切换。")
-                    .font(AppTheme.TypeScale.note)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 4)
+                // 🔴 2026-11-22 主人：删掉「「自动」跟随系统…本 App 不再随系统切换。」
+                //    三个选项名字本身就说明了行为，这行只是把「自动」翻译了一遍。
             }
             .padding(.horizontal, AppTheme.hInset)
             .padding(.vertical, 18)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("外观")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -126,7 +123,8 @@ struct FontSizeView: View {
                         .foregroundStyle(AppTheme.accent)
                         .padding(.top, 2)
 
-                    Text("以上为示例，实际字号随滑块变化。")
+                    // 🔴 2026-11-22 主人：原句「以上为示例，实际字号随滑块变化。」→ 两个字。
+                    Text("示例")
                         .font(AppTheme.TypeScale.note)
                         .foregroundStyle(.tertiary)
                         .padding(.top, 6)
@@ -188,7 +186,8 @@ struct FontSizeView: View {
                 .padding(16)
                 .settingsCard()
 
-                Text("字号只影响Codelumi自己，不改系统的文字大小。设置页、列表与卡片会一起变化。")
+                // 🔴 2026-11-22 主人：只留用户猜不到的那半句（不动系统字号）。
+                Text("只改本 App，不动系统字号。")
                     .font(AppTheme.TypeScale.note)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 4)
@@ -196,7 +195,7 @@ struct FontSizeView: View {
             .padding(.horizontal, AppTheme.hInset)
             .padding(.vertical, 18)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("字体大小")
         .navigationBarTitleDisplayMode(.inline)
     }

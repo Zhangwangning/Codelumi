@@ -74,16 +74,22 @@ enum CourierBrand {
             return from
         }
 
-        /// UI 用色 = **墨色版本**（亮品牌自动压暗，浅底可读）；深色背景用 `resolvedFrom`。
-        var color: Color { Color(hex: ink) }
+        /// UI 用色：随外观自适应 —— 浅色用墨色版本（亮品牌压暗），深色用提亮版本。
+        /// 统一入口是 `CourierBrand.color(for:)`，这里保持一致，别各取一版。
+        var color: Color { Color.adaptive(light: ink, dark: inkOnDark) }
 
         /// 浅色背景上的「品牌墨色」：主色过亮（黄、浅绿、浅粉）时自动压暗一档。
         ///
         /// 为什么需要：取色统一到图标之后，丰巢 / 韵达 / 美团 / DHL 这些**黄色品牌**
         /// 的取件码直接画 `#F3C50D` 会在浅黄卡面、浅黄玻璃底上糊成一片。
         /// 压暗后仍是同一色相（深黄），辨识度与可读性兼顾。
-        /// ⚠️ 深色背景（锁屏卡、灵动岛）**不要**用这个 —— 那里亮色才看得清。
+        /// ⚠️ 深色背景（锁屏卡、灵动岛）**不要**用这个 —— 那里亮色才看得清，用 `inkOnDark`。
         var ink: UInt32 { CourierBrand.inkColor(resolvedFrom) }
+
+        /// 深色背景上的品牌文字色：**暗品牌提亮到可读**，亮品牌原样。
+        ///
+        /// 见 `CourierBrand.color(for:)` 的注释（2026-11-22 深色模式可读性修复）。
+        var inkOnDark: UInt32 { CourierBrand.inkColorOnDark(resolvedFrom) }
     }
 
     /// 人工颜色覆盖表 —— **例外，不是常态**。
@@ -511,12 +517,23 @@ enum CourierBrand {
     private nonisolated(unsafe) static var stationCache: [String: String] = [:]
     private static let stationCacheLock = NSLock()
 
-    /// 品牌主色（**浅色背景上的统一取色入口**：卡面、取件码、图标晕、胶囊）
+    /// 品牌主色 —— **全 App 统一的取色入口**（卡面淡染、取件码、图标晕、胶囊、详情字段）
     ///
-    /// 2026-10-28：改成返回 `ink` —— 亮色品牌（黄）自动压暗一档，
-    /// 否则浅黄卡面上再画亮黄码，字会糊掉。深色背景请直接用 UInt32 的 `resolvedFrom`。
+    /// 🔴 2026-11-22 老大（深色模式截图）：「像圆通快递这样式的取件码信息基本上都看不见了」。
+    ///    根因是这里一直只返回 `ink` —— 那是**为浅色底压暗**的颜色（亮品牌黄/浅绿压一档，
+    ///    保证白底上不糊），圆通紫压完只剩 `#5B2C87` 这种亮度，放到深色卡面上就是
+    ///    「深紫 on 深灰」，取件码、详情页字段、添加时间全看不清。
+    ///
+    /// 现在按外观二选一（`Color.adaptive`，随系统深色即时切换）：
+    ///   · 浅色 → `ink`：压暗版，浅底可读（原有口径不变）；
+    ///   · 深色 → `inkOnDark`：**原色亮度不够就向白色混合提亮**，直到 BT.601 亮度 ≥ 0.55，
+    ///     色相不变（圆通仍是紫、丰巢仍是黄），只是从"墨紫"变成"亮紫"。
+    ///
+    /// ⚠️ 不要再在深色界面里写 `Color(hex: info.resolvedFrom)` 绕开这个入口 ——
+    ///    那会得到与列表卡不同的色，又回到"同一个件两种颜色"。
     static func color(for company: String) -> Color {
-        Color(hex: info(for: company).ink)
+        let brand = info(for: company)
+        return Color.adaptive(light: brand.ink, dark: brand.inkOnDark)
     }
 
     /// 把「申通」这类**词根**归一成品牌表里的标准名（「申通快递」）。
@@ -537,11 +554,43 @@ enum CourierBrand {
     /// 亮度口径用 ITU-R BT.601（0.299R + 0.587G + 0.114B），
     /// 阈值 0.66 ≈ #A8A8A8 的亮度 —— 比它更亮的色在浅底上做文字都偏虚。
     static func inkColor(_ hex: UInt32) -> UInt32 {
+        luminance(hex) > 0.66 ? shade(hex, 0.62) : hex
+    }
+
+    /// 把品牌主色**提亮**到深色背景上可读；本来就够亮的品牌原样返回。
+    ///
+    /// 手法：向白色按 16% 逐档混合（色相不变，只抬明度），直到 BT.601 亮度 ≥ 0.55，
+    /// 最多 6 档（= 96%，足够把任何深色抬成浅色）。举例：
+    ///   · 圆通紫 `#5B2C87`（亮度 0.27）→ 混 3 档后约 `#A991C0`（0.62）—— 深灰卡面上清晰；
+    ///   · 丰巢黄 `#F3C50D`（0.75）→ 本来就够亮，原样返回；
+    ///   · 顺丰红 `#DC1E32`（0.36）→ 混 2 档后约 `#E96A77`，在深色卡上不再是"一团暗红"。
+    ///
+    /// 2026-11-22 加：老大深色模式截图里，圆通件的取件码、详情字段、添加时间几乎看不见。
+    static func inkColorOnDark(_ hex: UInt32) -> UInt32 {
+        if luminance(hex) >= 0.55 { return hex }
+        var mixed = hex
+        for step in 1...6 {
+            mixed = blendWithWhite(hex, amount: Double(step) * 0.16)
+            if luminance(mixed) >= 0.55 { return mixed }
+        }
+        return mixed
+    }
+
+    /// ITU-R BT.601 相对亮度（0…1）
+    private static func luminance(_ hex: UInt32) -> Double {
         let r = Double((hex >> 16) & 0xFF) / 255
         let g = Double((hex >> 8) & 0xFF) / 255
         let b = Double(hex & 0xFF) / 255
-        let lum = 0.299 * r + 0.587 * g + 0.114 * b
-        return lum > 0.66 ? shade(hex, 0.62) : hex
+        return 0.299 * r + 0.587 * g + 0.114 * b
+    }
+
+    /// 向白色混合 `amount`（0…1），只抬明度不改色相
+    private static func blendWithWhite(_ hex: UInt32, amount: Double) -> UInt32 {
+        func mix(_ channel: UInt32) -> UInt32 {
+            let v = Double(channel) + (255 - Double(channel)) * amount
+            return UInt32(min(255, v.rounded()))
+        }
+        return (mix((hex >> 16) & 0xFF) << 16) | (mix((hex >> 8) & 0xFF) << 8) | mix(hex & 0xFF)
     }
 
     /// 按分类取清单（供图标总览页使用）

@@ -68,7 +68,7 @@ struct AutoRecordSettingsView: View {
             .padding(.horizontal, AppTheme.hInset)
             .padding(.vertical, 16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("快捷指令")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: Binding(
@@ -348,8 +348,9 @@ struct AutoRecordSettingsView: View {
     // MARK: 说明
 
     private var note: some View {
-        // 只留最要紧的两件事：加完要去开开关；一条自动化 = 一条系统通知。
-        Text("加完请到「快捷指令 › 自动化」把开关打开（默认是关的）。默认加「【」就够；每多一条自动化，就多一条系统「自动化已运行」通知。")
+        // 🔴 2026-11-22 主人：与上方预设脚注**去重** —— 那句「每多一条自动化就多一条通知」
+        //    已经写在上面的脚注里，这里只留用户一定会踩的那一步（开关默认是关的）。
+        Text("加完请到「快捷指令 › 自动化」把开关打开（默认是关的）。")
             .font(AppTheme.TypeScale.note)
             .foregroundStyle(.secondary)
             .lineSpacing(3)

@@ -72,7 +72,7 @@ struct CodeManagementView: View {
             .padding(.top, 8)
             .padding(.bottom, 60)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("取件码管理")
         .cloaksTabBar()
         .navigationBarTitleDisplayMode(.inline)

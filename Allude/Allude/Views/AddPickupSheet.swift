@@ -12,6 +12,27 @@ import UIKit
 // 这条兜底是必要的 —— 用户手上可能只有一个码，没有短信原文。
 // ============================================================================
 
+// MARK: - 裸码判据
+
+/// 这段输入是不是「本身就是一个取件码」。
+///
+/// 2026-11-22 语音录入整块删除后，这个判据只剩文本录入与照片录入两处使用 ——
+/// 之前放在已删除的语音页里，跟着一起丢过，别再挪回去。
+///
+/// 判据刻意保守：宁可让用户多点一次「作为取件码添加」，也不能把**半条短信**
+/// 当成码塞进列表（那会生成「您的圆通快递包裹已…」这种垃圾记录）。
+enum BareCodeHeuristic {
+    static func isLikely(_ raw: String) -> Bool {
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (1...48).contains(t.count) else { return false }
+        guard !t.contains("\n") else { return false }
+        // 纯码里不该出现空格或句读，否则更像是被截断的短信
+        guard t.rangeOfCharacter(from: .whitespaces) == nil else { return false }
+        let punctuation = CharacterSet(charactersIn: "。，,、；;！!？?")
+        return t.rangeOfCharacter(from: punctuation) == nil
+    }
+}
+
 final class AddPickupModel: ObservableObject {
     @Published var text: String = "" {
         didSet { reparse() }
@@ -47,15 +68,7 @@ final class AddPickupModel: ObservableObject {
     var hasInput: Bool { !trimmed.isEmpty }
 
     /// 输入只有一行且不含空白/中文时，才认为「可以当作一个纯码」
-    var looksLikeBareCode: Bool {
-        let t = trimmed
-        guard (1...48).contains(t.count) else { return false }
-        guard !t.contains("\n") else { return false }
-        guard t.rangeOfCharacter(from: .whitespaces) == nil else { return false }
-        // 纯码里不该出现空格或句读，否则更像是被截断的短信
-        let punctuation = CharacterSet(charactersIn: "。，,、；;！!？?")
-        return t.rangeOfCharacter(from: punctuation) == nil
-    }
+    var looksLikeBareCode: Bool { BareCodeHeuristic.isLikely(text) }
 
     func pasteFromClipboard() {
         if let value = UIPasteboard.general.string, !value.isEmpty { text = value }
@@ -67,7 +80,7 @@ final class AddPickupModel: ObservableObject {
 struct AddPickupSheet: View {
     @EnvironmentObject private var store: PickupStore
     @StateObject private var model: AddPickupModel
-    /// 键盘焦点：点空白 / 滚页面 / 点键盘上的「完成」都能收起
+    /// 键盘焦点：点空白 / 往下拖页面都能收起（2026-11-22 起不再挂键盘上方的「完成」）
     @FocusState private var editorFocused: Bool
 
     /// 关闭回调（由父视图控制呈现状态，避免依赖 dismiss 环境值）
@@ -103,7 +116,7 @@ struct AddPickupSheet: View {
             }
             // 手指往下拖列表就把键盘收起来（系统标准行为）
             .scrollDismissesKeyboard(.interactively)
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.sheetSurface)   // 半屏面板 = 比页面亮一档
             .navigationTitle("添加取件信息")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -115,11 +128,12 @@ struct AddPickupSheet: View {
                         .fontWeight(.semibold)
                         .disabled(!model.hasInput || model.addedMessage != nil)
                 }
-                // 键盘上方给一个「完成」：不想滚动时也能一键收键盘
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("完成") { editorFocused = false }
-                }
+                // 🔴 这里原来挂着一个 `placement: .keyboard` 的「完成」按钮（收键盘用）。
+                //    2026-11-22 老大截图问「屏幕右下角为啥有个完成按钮」—— iOS 26 把它当作
+                //    浮动工具条渲染，键盘没弹出来时它就孤零零悬在右下角，既不属于导航栏
+                //    也不属于页面内容，纯噪音。收键盘本就有两条更自然的路：
+                //    点空白（`onTapGesture`）+ 下拖页面（`scrollDismissesKeyboard`），
+                //    所以整块删掉，不再给它安排位置。
             }
         }
     }
@@ -175,6 +189,8 @@ struct AddPickupSheet: View {
                             enabled: model.hasInput) {
                     model.clear()
                 }
+                // 🔴 2026-11-22 主人：「语音输入不要和粘贴解析添加放在一起」。
+                //    2026-11-22 晚语音录入整块删除，本页只剩「贴一段文字」这一件事。
                 Spacer(minLength: 0)
             }
 
@@ -224,9 +240,9 @@ struct AddPickupSheet: View {
                 }
 
                 // 多条时逐张列出，添加前能核对到每一条
-                ForEach(Array(model.parsedList.enumerated()), id: \.offset) { index, parsed in
-                    ParsePreviewCard(parsed: parsed,
-                                     index: model.parsedList.count > 1 ? index + 1 : nil)
+                // （序号已去掉：待取卡没有序号，预览卡照它排版，条数由上面的「已识别 N 条」交代）
+                ForEach(Array(model.parsedList.enumerated()), id: \.offset) { _, parsed in
+                    ParsePreviewCard(parsed: parsed)
                 }
             }
         } else if model.looksLikeBareCode {
@@ -296,7 +312,8 @@ struct AddPickupSheet: View {
 
     private func submit() {
         guard model.hasInput else { return }
-        var outcome = store.ingestOCR(model.trimmed)
+        // 文本/拍照/相册录入都在 App 内、用户亲手确认 → 不弹通知
+        var outcome = store.ingestOCR(model.trimmed, source: .inApp)
 
         // 🔴 解析器一条都没认出来时，兜底把整段输入当取件码（2026-10-25 审查修）。
         // 以前这里只走 `ingestOCR`：用户手输「A128」这种短信正则认不出、但明显是
@@ -340,111 +357,104 @@ struct AddPickupSheet: View {
 
 // MARK: - 解析结果预览（添加页与扫描页共用）
 
-/// 把 `PickupParseResult` 的**全部字段**摊平成一张可核对的卡。
-/// 用户点「添加」之前能一眼确认「是不是识别成了我要的东西」——
-/// 这比添加完再去列表里翻找要可靠得多。
+/// 用户点「添加」之前，先看到这条记录**将会长成什么样**。
 ///
-/// 🔴 字段口径（2026-10-30 主人修订）：预览卡只列**核对得上的四项** ——
-///    取件码 / 平台 / 快递公司 / 地址。
-///    运单号、尾号**不再单独成行**：绝大多数短信里这两个字段是空的，
-///    留着就是两行空占位；即便有值，主凭证位已经显示了真正要核对的那串码。
-///    数据本身照旧解析并入库，需要时在详情页查看（`RecordDetailView` 仍保留这两项）。
-///    **识别不出的字段留空**，不写「未识别到」也不编造。
+/// 🔴 2026-11-22 老大：「手工录入时这里的卡片保持和待取页面的卡片样式一样」。
+///    以前这里是录入页自创的第二套版式（左图标 22 + 主名 15 + 右上角大码 + 四行字段表），
+///    待取卡是另一套（主名 15.5 ｜ 副名 13 → 地址 12.5 → 虚线 → 图标 26 + 大码 30 → 右端勾选圈）。
+///    既然规矩是「一条短信在哪个页面都长一样」，预览卡就该是**待取卡的预览**，不是另一张卡片。
 ///
-/// 🔴 2026-10-28 主人：「Codelumi内再不区分取件码信息的类型」——
-///    删掉「类别」行与类别标签，主凭证一律叫取件码（不再写「运单号 / 尾号 / 特殊码」）；
-///    配色也从「类型色」改成**品牌色**，与列表卡同一套取色逻辑。
+/// 字段口径不变：取件码 / 快递公司 / 短信平台 / 地址都会出现，只是改由卡面本身表达 ——
+/// 主名行 = 「快递公司 ｜ 平台」，地址行 = 地址，大码 = 取件码。
+/// 运单号、尾号照旧不单独成行（绝大多数短信里是空的），数据本身仍完整入库。
 struct ParsePreviewCard: View {
     let parsed: PickupParseResult
-    /// 一次识别多条时在卡头显示序号，单条时为 nil（不占位）
-    var index: Int? = nil
 
     /// 主凭证 —— 不论解析时走的是哪条公式，到界面上一律叫「取件码」
     private var code: String { parsed.value }
-    /// 快递公司（2026-09-23 主人定）：与平台一边没匹配到就保持相同。
-    /// 解析层已互填归一，这里再兜底一次，防 OCR 之外的路径漏网。
-    private var courier: String { parsed.courier.isEmpty ? parsed.company : parsed.courier }
 
-    /// 卡头命名 —— **与待取卡同一套 `PickupNaming`**（2026-10-30 主人：
-    /// 「预览卡也要和卡片取色规则一致」）。
-    /// 以前这里直接显示短信平台，于是「【欢猫驿站】圆通快递…」预览成一张绿卡，
-    /// 保存进列表却变成紫卡（列表主名是快递公司），同一个码两种颜色。
+    /// 卡面命名 —— **与落库后的 `record.naming(...)` 完全同口径**：
+    /// 快递公司先归一到标准名（「圆通快递」→「圆通速递」），没有公司就退到短信平台。
+    /// 以前这里直接传原始的 `parsed.courier`，于是预览写「圆通快递」、存进列表变「圆通速递」，
+    /// 同一个件两个名字（2026-11-22 并掉）。
     private var naming: PickupNaming {
-        PickupNaming(courier: courier, platform: parsed.company, station: nil)
+        PickupNaming(courier: parsed.courier.isEmpty
+                     ? nil
+                     : CourierBrand.canonicalName(for: parsed.courier),
+                     platform: parsed.company,
+                     station: nil)
     }
 
     /// 配色 = **图标主题色**，即第一行第一个字段（快递公司优先）的颜色
     private var tint: Color { CourierBrand.color(for: naming.iconSource) }
 
+    private var address: String {
+        parsed.address.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                if let index {
-                    Text("\(index)")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .frame(width: 18, height: 18)
-                        .background(tint, in: .circle)
+            // 行 1：主名（快递公司 > 平台）｜ 副名 —— 字号与待取卡同一串（15.5 / 13）
+            HStack(spacing: 6) {
+                Text(naming.primary.L)
+                    .font(.system(size: 15.5, weight: .semibold))
+                    .lineLimit(1)
+
+                if let secondary = naming.secondary {
+                    Text("|")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.secondary.opacity(0.45))
+
+                    Text(secondary.L)
+                        .font(.system(size: 13))
+                        .lineLimit(1)
+                        .foregroundStyle(.secondary)
                 }
 
-                CourierLogo(company: naming.iconSource, size: 22)
+                Spacer(minLength: 6)
+            }
 
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text(naming.primary.L)
-                            .font(.system(size: 15, weight: .semibold))
-                            .lineLimit(1)
-                        if let secondary = naming.secondary {
-                            Text("| \(secondary)")
-                                .font(.system(size: 12))
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
+            // 行 2：取件地址（识别不出就整行不出现，不留空占位）
+            if !address.isEmpty {
+                Text(address.L)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.top, 4)
+            }
 
-                Spacer(minLength: 8)
+            // 分界虚线：位置与留白都照待取卡（上 8 / 右 2）
+            DashedDivider()
+                .padding(.top, 8)
+                .padding(.trailing, 2)
 
-                Text(parsed.value.L)
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
+            // 行 3：图标（26，与码视觉居中）+ 大码 30 + 右端勾选圈占位
+            HStack(alignment: .center, spacing: 8) {
+                PickupIcon(naming: naming, size: 26)
+
+                PickupCodeEmphasis.text(code, tint: tint)
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                     .monospaced()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                    .foregroundStyle(tint)
+
+                Spacer(minLength: 6)
+
+                // 右端照待取卡摆一个勾选圈：**纯静态图形**（还没入库，没有可标记的对象）。
+                // 尺寸/线宽与 `CompleteButton` 的空态完全一致（27pt 圈 / 1.8 描边 / 44 热区），
+                // 但画成 Circle 而不是 Button —— 不假装能点，点了也不会毫无反馈。
+                Circle()
+                    .strokeBorder(Color.secondary.opacity(0.5), lineWidth: 1.8)
+                    .frame(width: 27, height: 27)
+                    .frame(width: 44, height: 44)
+                    .accessibilityHidden(true)
             }
-
-            DashedDivider()
-                .padding(.vertical, 11)
-
-            field(label: "取件码", value: code, mono: true, tint: tint)
-            field(label: "平台", value: parsed.company, mono: false, tint: .secondary)
-            field(label: "快递公司", value: courier, mono: false, tint: .secondary)
-            field(label: "地址", value: parsed.address, mono: false, tint: .secondary)
+            .padding(.top, 7)
         }
-        .padding(15)
+        .padding(.horizontal, AppTheme.cardPadding)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardSurface(tint: tint)
-    }
-
-    @ViewBuilder
-    private func field(label: String, value: String,
-                       mono: Bool, tint: Color) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text(label.L)
-                .font(.system(size: 12))
-                .foregroundStyle(.tertiary)
-                .frame(width: 58, alignment: .leading)
-
-            Text(value.L)
-                .font(.system(size: 13, weight: mono ? .semibold : .regular,
-                              design: mono ? .rounded : .default))
-                .monospaced(mono)
-                .foregroundStyle(tint)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, 3)
     }
 }

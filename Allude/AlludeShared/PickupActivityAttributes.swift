@@ -1,4 +1,5 @@
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -107,7 +108,7 @@ struct PickupActivityAttributes: ActivityAttributes {
 
     /// 锁屏卡几何：HIG 规定高 84–160pt、标准内边距 14pt、宽 = 屏宽 − 22。
     enum LockScreenMetrics {
-        /// 一页放几条
+        /// 一页放几条（2026-11-23 起卡片只画一条，这个值只留给旧快照兼容）
         static let perPage = 3
         /// 内容区高度：三条用满上限（160 − 14×2）
         static let contentHeight: CGFloat = 132
@@ -117,13 +118,13 @@ struct PickupActivityAttributes: ActivityAttributes {
         /// 两条：介于两者之间（118 − 14×2）
         static let doubleContentHeight: CGFloat = 90
 
-        /// 按当前页条数取内容区高度
+        /// 🔴 2026-11-23 老大：「锁屏卡片不再区分待取数量…卡片高度增加」——
+        ///    现在只有**一种**版式（一条 + 底部切换），高度也就只有一个值。
+        ///    比原来的一页三条再高一截：取件码、地址、切换行三行字要松快些。
+        static let unifiedContentHeight: CGFloat = 150
+
         static func contentHeight(for rows: Int) -> CGFloat {
-            switch rows {
-            case 0, 1: singleContentHeight
-            case 2:    doubleContentHeight
-            default:   contentHeight
-            }
+            unifiedContentHeight
         }
         /// 卡内上下左右内边距
         static let inset: CGFloat = 14
@@ -217,206 +218,111 @@ enum LockCardGlass {
 struct ActivityLockScreenCard: View {
     let state: PickupActivityAttributes.ContentState
 
-    /// 卡面文字一律白/亮色 + 深色描影：锁屏卡底透的是**用户的壁纸**，
-    /// 语义色在这层玻璃上会跟浅色壁纸糊在一起（2026-10-28 真机实证）。
-    private var secondaryInk: Color { .white.opacity(0.80) }
+    private var secondaryInk: Color { .white.opacity(0.92) }
     private var inkShadow: Color { .black.opacity(0.40) }
 
-    /// 一页三条（2026-11-08 主人定）：不解锁手机也要能一次看仨码。
-    private var page: [PickupActivityAttributes.Item] { state.lockPage }
-    private var totalPages: Int {
-        max(1, Int(ceil(Double(state.pendingCount) / Double(PickupActivityAttributes.LockScreenMetrics.perPage))))
-    }
+    private var item: PickupActivityAttributes.Item { state.item }
 
-    var body: some View {
-        if page.count == 1, let only = page.first {
-            singleCard(only)
-        } else {
-            listCard
+    /// 主名 + 后缀：快递公司 · 快递驿站 / 短信平台
+    private var subtitle: String {
+        if let platform = item.platformSuffix, !platform.isEmpty {
+            return "\(item.displayName) · \(platform)"
         }
+        return item.displayName
     }
 
-    /// 单条：**恢复加高之前的版式**（2026-11-08 主人指定）——
-    /// 上面一行「快递公司 | 驿站/平台」，中间大码 + 柜位，下面一行地址；
-    /// 高度由内容决定（约 78pt），不占满 160。
-    /// 码多长算「长」：≥8 位（运单号 13 位、带前缀的 8-2-4031 都算）。
-    /// 长码会把同一行挤满，柜位就搬到来源行末尾做标签。
-    private func isLongCode(_ code: String) -> Bool { code.count >= 8 }
-
-    /// 柜位标签：白字半透明胶囊，跟在文字后面时不抢主信息
-    private func lockerTag(_ locker: String) -> some View {
-        Text(locker.L)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.white)
-            .lineLimit(1)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2.5)
-            .background(Capsule().fill(.white.opacity(0.20)))
-            .overlay(Capsule().stroke(.white.opacity(0.25), lineWidth: 0.5))
-    }
-
-    private func singleCard(_ item: PickupActivityAttributes.Item) -> some View {
+    /// 🔴 2026-11-23 老大给的最终版式（参考音乐卡）：
+    ///    左上图标 → 右侧「公司/驿站」+ 地址（单行省略）→ 右上「还有 N 待取件」；
+    ///    图标下方是放大的取件码（一行装完）+ 右侧「已取件」药丸（点了就算取走）。
+    var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 6) {
-                Text(item.displayName.L)
-                    .font(.system(size: 17, weight: .semibold))
+            // 名称行（左上留出图标位）
+            HStack(spacing: 8) {
+                Color.clear.frame(width: 44, height: 0)
+                Text(subtitle)
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
-                    .shadow(color: inkShadow, radius: 2, x: 0, y: 0.5)
                     .lineLimit(1)
-
-                if let platform = item.platformSuffix {
-                    Text("| \(platform)")
-                        .font(.system(size: 14))
-                        .lineLimit(1)
-                        .foregroundStyle(secondaryInk)
-                        .shadow(color: inkShadow, radius: 1.5, x: 0, y: 0.5)
-                }
-
-                // 码太长时，柜位以标签形式跟在来源行文字后面（2026-11-08 主人定）
-                if isLongCode(item.code), let locker = item.locker, !locker.isEmpty {
-                    lockerTag(locker)
-                }
-
+                    .shadow(color: inkShadow, radius: 1, x: 0, y: 0.5)
                 Spacer(minLength: 6)
+                Text("还有 \(state.pendingCount) 待取件")
+                    .font(.system(size: 11, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundStyle(.white.opacity(0.82))
+                    .lineLimit(1)
+                    .shadow(color: inkShadow, radius: 1, x: 0, y: 0.5)
+                    // 11pt 的行框在 14pt 行里居中会显得偏低 —— 顶到内容块上边框
+                    .frame(maxHeight: .infinity, alignment: .top)
             }
+
+            // 地址行：紧贴名称，整卡宽度可用（真放不下才省略）
+            if !item.address.isEmpty {
+                HStack(spacing: 0) {
+                    // 52 = 图标 44 + 与名称行相同的 6pt 间距 + 2pt 光学补偿
+                    Color.clear.frame(width: 52, height: 0)
+                    Text(item.address.L)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .shadow(color: inkShadow, radius: 1, x: 0, y: 0.5)
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, 4)
+            }
+
+            Spacer().frame(height: 12)
 
             HStack(alignment: .center, spacing: 10) {
-                CourierLogo(company: item.displayName, size: 28, showsShadow: false, usesStaticAsset: true)
-
-                // 🔴 2026-11-16：不再单独传 0.78。取件码样式改为全端统一读
-                //    `CodeAppearanceStyle.current`，岛内只保留 `islandInk` 作为品牌色回落。
-                PickupCodeEmphasis.text(item.code, tint: islandInk(item.tint))
-                    .font(.system(size: 31, weight: .bold, design: .rounded))
+                PickupCodeEmphasis.text(item.code, tint: .white, headOpacity: 1.0)
+                    .font(.system(size: 34, weight: .heavy, design: .rounded))
                     .monospaced()
                     .lineLimit(1)
-                    .minimumScaleFactor(0.45)
+                    .minimumScaleFactor(0.30)
                     .allowsTightening(true)
                     .layoutPriority(1)
-                    .shadow(color: inkShadow, radius: 2.5, x: 0, y: 0.5)
+                    .shadow(color: .black.opacity(0.35), radius: 1, x: 0, y: 0.5)
 
-                if let locker = item.locker, !locker.isEmpty, !isLongCode(item.code) {
+                if let locker = item.locker, !locker.isEmpty {
                     Text(locker.L)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.95))
                         .lineLimit(1)
-                        .foregroundStyle(secondaryInk)
-                        .truncationMode(.tail)
-                        .layoutPriority(0)
-                        .shadow(color: inkShadow, radius: 1.5, x: 0, y: 0.5)
+                        .fixedSize()
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(.white.opacity(0.20)))
+                        .overlay(Capsule().stroke(.white.opacity(0.28), lineWidth: 0.5))
                 }
 
-                Spacer(minLength: 0)
-            }
-            .padding(.top, 6)
+                Spacer(minLength: 4)
 
-            if !item.address.isEmpty {
-                Text(item.address.L)
-                    .font(.system(size: 14))
-                    .foregroundStyle(secondaryInk)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .padding(.top, 3)
+                pillButton
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // 图标用 overlay 摆：不参与行高计算，名称就能贴着图标顶部，
+        // 地址也能紧接在名称下面（以前它被 44pt 的图标撑开一截，中间空一大块）。
+        .overlay(alignment: .topLeading) {
+            CourierLogo(company: item.displayName, size: 44,
+                        showsShadow: false, usesStaticAsset: true)
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// 多条（2–3）：列表版式，高度用满 160pt 上限
-    private var listCard: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(page.enumerated()), id: \.element.id) { index, item in
-                    if index > 0 {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.14))
-                            .frame(height: 0.5)
-                    }
-                    row(item)
-                }
-                Spacer(minLength: 0)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            // 右侧翻页：只在超过一页时出现（一页装得下就别给多余控件）
-            if state.pendingCount > PickupActivityAttributes.LockScreenMetrics.perPage {
-                VStack(spacing: 4) {
-                    Button(intent: PreviousPickupIntent()) {
-                        Image(systemName: "chevron.up")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(secondaryInk)
-                            .frame(width: 34, height: 30)
-                            .background(Capsule().fill(.white.opacity(0.16)))
-                    }
-                    .buttonStyle(.plain)
-
-                    Text("\(state.pendingCount) 条")
-                        .font(.system(size: 10, weight: .medium))
-                        .monospacedDigit()
-                        .foregroundStyle(secondaryInk)
-
-                    Button(intent: NextPickupIntent()) {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(secondaryInk)
-                            .frame(width: 34, height: 30)
-                            .background(Capsule().fill(.white.opacity(0.16)))
-                    }
-                    .buttonStyle(.plain)
-                }
-                // 翻页按钮整体垂直居中（2026-11-08 主人：别贴在卡顶）
-                .frame(maxHeight: .infinity, alignment: .center)
-            }
+    /// 「已取件」药丸 —— 看着就是可点的按钮，点一下把当前这件标记为已取。
+    private var pillButton: some View {
+        Button(intent: CompletePickupIntent(recordID: item.id)) {
+            Text("已取件")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.82))
+                .padding(.horizontal, 12)
+                .frame(height: 26)
+                .background(Capsule().fill(.white.opacity(0.92)))
+                .frame(height: 30)          // 只留一点点热区余量，否则底部会多出看不见的 7pt
+                .contentShape(.rect)
         }
-        // HIG：锁屏卡 84–160pt，取上限 160；减去上下 14pt 内边距 = 内容区 132pt。
-        // 用**定高**（不是 Spacer）：外层舞台是整屏提案，Spacer 会把卡撑成整屏。
-        .frame(height: PickupActivityAttributes.LockScreenMetrics.contentHeight(for: page.count),
-               alignment: .topLeading)
-    }
-
-    /// 一行：品牌图标 + 取件码（主角）+ 地址
-    private func row(_ item: PickupActivityAttributes.Item) -> some View {
-        HStack(spacing: 10) {
-            CourierLogo(company: item.displayName, size: 22, showsShadow: false, usesStaticAsset: true)
-
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 6) {
-                    PickupCodeEmphasis.text(item.code,
-                                            tint: islandInk(item.tint))
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .monospaced()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.55)
-                        .allowsTightening(true)
-                        .layoutPriority(1)
-                        .shadow(color: inkShadow, radius: 2, x: 0, y: 0.5)
-
-                    // 多条时柜位一律做成**标签跟在码尾**（2026-11-08 主人定）：
-                    // 列表行空间紧，塞进码右侧会挤掉码本身；标签只占 8pt 高。
-                    if let locker = item.locker, !locker.isEmpty {
-                        Text(locker.L)
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                            .fixedSize()
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(.white.opacity(0.20)))
-                            .overlay(Capsule().stroke(.white.opacity(0.25), lineWidth: 0.5))
-                    }
-                }
-
-                if !item.address.isEmpty {
-                    Text(item.address.L)
-                        .font(.system(size: 11))
-                        .foregroundStyle(secondaryInk)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 7)
+        .buttonStyle(.plain)
+        .fixedSize()
     }
 }
 
@@ -651,44 +557,30 @@ struct IslandExpandedContent: View {
     /// 真机展开态的三个可画区，预览按同一结构复现：
     ///
     /// ```
-    /// ┌────────────────────────────────┐
-    /// │ [leading]      (挖孔)   [trailing] │  ← 挖孔高度 37pt
-    /// ├────────────────────────────────┤
-    /// │ bottom：取件码（+柜位）           │
-    /// │ bottom：取件地址                  │
-    /// └────────────────────────────────┘
+    /// ┌────────────────────────────────────┐
+    /// │ [leading]      (挖孔)   [trailing] │
+    /// ├────────────────────────────────────┤
+    /// │ 取件码 + 柜位 ｜ 已取件 / 下一个       │
+    /// │ 取件地址                            │
+    /// └────────────────────────────────────┘
     /// ```
+    ///
+    /// 🔴 2026-11-23 老大：「内容整体看作一个矩形，要落在卡片正中，四边边距相等」——
+    ///    以前这里写死了内容高度，底部会多出一块空白。现在**不写死高度**，
+    ///    由内容自然撑开，四边统一用 `previewInset`；外层壳按"内容 + 2×inset"给高度，
+    ///    于是上下左右天然等距。
     var body: some View {
-        // 🔴 预览版式 = 真机版式 + 系统 region 内边距。
-        //    每个数都是「内容距岛缘的最终距离」，从 3x 原始截图反推出来的，
-        //    所以这里画出来的东西与真机是**同一套结构**，不是另画一张示意图。
-        VStack(alignment: .leading, spacing: 0) {
-            // 顶部行：内容落在挖孔**左右两侧**（真机的 leading / trailing 区）。
-            // 中间那段不能画东西（TrueDepth 挖孔），所以左右各靠边、中间整段空着。
+        VStack(alignment: .leading, spacing: IslandExpandedMetrics.previewRowGap) {
             HStack(spacing: 0) {
                 IslandExpandedLeading(state: state)
                 Spacer(minLength: IslandExpandedMetrics.punchHoleWidth)
                 IslandExpandedTrailing(state: state)
             }
-            .padding(.leading, IslandExpandedMetrics.previewLeading
-                     - IslandExpandedMetrics.hInset)
-            .padding(.trailing, IslandExpandedMetrics.previewTrailing
-                     - IslandExpandedMetrics.hInset)
-            // 挖孔占掉的那段高度用**顶部留白**表达
-            .padding(.top, IslandExpandedMetrics.previewTop)
 
-            VStack(alignment: .leading, spacing: IslandExpandedMetrics.previewLineSpacing) {
-                IslandExpandedBottom(state: state)
-            }
-            // 底部内容距岛缘 33pt（= 外层 12 + 这里 21）
-            .padding(.leading, IslandExpandedMetrics.previewHInset
-                     - IslandExpandedMetrics.hInset)
-            .padding(.top, IslandExpandedMetrics.previewRowGap)
+            IslandExpandedBottom(state: state)
         }
-        .padding(.horizontal, IslandExpandedMetrics.hInset)
-        .padding(.bottom, IslandExpandedMetrics.previewBottom)
-        // 高度定死：外层壳按这个值摆岛，底部留白才不会被裁
-        .frame(height: IslandExpandedMetrics.previewTotalHeight)
+        .padding(IslandExpandedMetrics.previewInset)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -757,18 +649,14 @@ enum IslandExpandedMetrics {
     /// 预览：底部内容左缘距岛缘（与顶部行同值，三行左缘对齐）
     static let previewHInset: CGFloat = 24
     /// 预览：挖孔区留白（真机站名行距岛顶 16%，111pt × 16% ≈ 18）
-    static let previewTop: CGFloat = 12
+    static let previewInset: CGFloat = 20
     /// 预览：地址底距岛底（真机 19%，111pt × 19% ≈ 21）
-    static let previewBottom: CGFloat = 21
+    /// 内容区总高（预览外壳按 `previewTotalHeight` 摆岛）：内容 ~91 + 上下各 20
+    static let previewTotalHeight: CGFloat = 131
     /// 预览：站名行 → 码的空隙（按真机 111pt 总高反推）
-    static let previewRowGap: CGFloat = 9
+    static let previewRowGap: CGFloat = 10
     /// 预览：码 → 地址的行距
     static let previewLineSpacing: CGFloat = 5
-    /// 预览：整岛高度。
-    /// 等于 `previewTop 18 + 图标 20 + previewRowGap 7 + 码行 25 + 5 + 地址 15 + previewBottom 21`。
-    /// **必须给死** —— 不给的话外层用别的数字去卡高度，底部留白会被裁掉
-    /// （地址贴上岛底，观感立刻变差）。
-    static let previewTotalHeight: CGFloat = 92
 
     /// TrueDepth 挖孔宽度（官方 125.34pt，各机型一致）——
     /// 顶部行左右两块内容就是被它隔开的。
@@ -784,7 +672,7 @@ struct IslandExpandedLeading: View {
             // 图标不允许被压缩：HStack 宽度竞争时 Image 会被压扁，
             // 真机上就表现成「图标被挡住、看不全」。
             // 图标源与 App 内一致：快递公司 > 短信平台（2026-10-25 修）
-            CourierLogo(company: state.item.displayName, size: 18, usesStaticAsset: true)
+            CourierLogo(company: state.item.displayName, size: 21, usesStaticAsset: true)
                 .fixedSize()
 
             Text(state.item.displayName.L)
@@ -798,77 +686,98 @@ struct IslandExpandedLeading: View {
     }
 }
 
-/// 展开态 · 顶部右：待取数量（数字大、标签小）
+/// 展开态 · 顶部右：一行「还有 N 待取件」
+///
+/// 🔴 2026-11-23 老大：「右上角的待取数量做成一行，也是还有 XX 待取件」。
 struct IslandExpandedTrailing: View {
     let state: PickupActivityAttributes.ContentState
 
-    private var tint: Color { islandTint(state.item.tint) }
-
     var body: some View {
-        // 数字 + 标签：数字是第二视觉重心，标签只做释义。
-        // 「待取」原本 9pt —— 低于系统可读下限（11pt），小字会糊成一团；
-        // 放大到 11 之后与数字之间留 1pt，避免两行黏连。
-        VStack(alignment: .trailing, spacing: 1) {
-            Text("\(state.pendingCount)")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(tint)
-
-            Text("待取")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(islandSecondary)
-        }
-        .fixedSize()
+        Text("还有 \(state.pendingCount) 待取件")
+            .font(.system(size: 12, weight: .medium))
+            .monospacedDigit()
+            .foregroundStyle(.white.opacity(0.82))
+            .lineLimit(1)
+            .fixedSize()
     }
 }
 
-/// 展开态 · 底部：取件码（+ 柜位）与取件地址，各占一整行
 struct IslandExpandedBottom: View {
     let state: PickupActivityAttributes.ContentState
 
     private var tint: Color { islandTint(state.item.tint) }
 
+    /// 🔴 2026-11-23 老大给的版式（对齐锁屏卡）：
+    ///    左边 = 取件码（放大）+ 柜位标签，码下面一行地址；
+    ///    右边 = 上下两个胶囊：「已取件」（点了算取走）、「下一个」（切下一条）。
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // ① 取件码 —— 全岛唯一的视觉主角，任何情况下都不许截断
-            HStack(alignment: .lastTextBaseline, spacing: 8) {
-                PickupCodeEmphasis.text(state.item.code, tint: tint)
-                    // 19 → 21（2026-10-28 主人）：地址下方还有余量，把主角放大一点，
-                    // 整岛高度同时用掉那块空，视觉重心更稳。
-                    .font(.system(size: 21, weight: .bold, design: .rounded))
-                    .monospaced()
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-
-                // 柜位跟在码后面（与小组件同一口径）：到柜那一刻要用的信息。
-                if let locker = state.item.locker, !locker.isEmpty {
-                    Text(locker.L)
-                        .font(.system(size: 11, weight: .medium))
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 6) {
+                    PickupCodeEmphasis.text(state.item.code, tint: tint, headOpacity: 0.85)
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .monospaced()
                         .lineLimit(1)
-                        .foregroundStyle(islandSecondary)
-                        .fixedSize(horizontal: true, vertical: false)
+                        .minimumScaleFactor(0.55)
+                        .allowsTightening(true)
+                        .layoutPriority(1)
+
+                    if let locker = state.item.locker, !locker.isEmpty {
+                        Text(locker.L)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.92))
+                            .lineLimit(1)
+                            .fixedSize()
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(.white.opacity(0.18)))
+                            .overlay(Capsule().stroke(.white.opacity(0.26), lineWidth: 0.5))
+                    }
                 }
 
-                Spacer(minLength: 0)
-            }
+                // 左列撑满整行高度，地址用 Spacer 顶到底 ——
+                // 这样「地址底」与右侧「下一个」胶囊底天然齐平（2026-11-23 老大要求）。
+                Spacer(minLength: 4)
 
-            // ② 取件地址 —— 单独一行拿满宽度，长地址才不至于只露七八个字。
-            //    左侧补 `addressOpticalInset`：汉字字形几乎贴着字符框，
-            //    而上面的取件码是数字（字形左侧有 side bearing）——
-            //    不补这 2.5pt，地址会比码凸出来一点，三行看着不齐。
-            if !state.item.address.isEmpty {
-                Text(state.item.address.L)
-                    // 12pt 用 semibold 会显得比 21pt 的码还"重"，
-                    // 系统在这么小的字号上一律用 regular/medium。
-                    .font(.system(size: 12, weight: .medium))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .foregroundStyle(islandSecondary)
-                    .padding(.leading, IslandExpandedMetrics.addressOpticalInset)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                if !state.item.address.isEmpty {
+                    Text(state.item.address.L)
+                        .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(islandSecondary)
+                        .padding(.leading, IslandExpandedMetrics.addressOpticalInset)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+            VStack(alignment: .trailing, spacing: 6) {
+                Button(intent: CompletePickupIntent(recordID: state.item.id)) {
+                    Text("已取件")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.85))
+                        .padding(.horizontal, 10)
+                        .frame(height: 22)
+                        .background(Capsule().fill(.white.opacity(0.92)))
+                        .frame(height: 27)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+
+                Button(intent: NextPickupIntent()) {
+                    Text("下一个")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .padding(.horizontal, 10)
+                        .frame(height: 22)
+                        .background(Capsule().fill(.white.opacity(0.16)))
+                        .overlay(Capsule().stroke(.white.opacity(0.24), lineWidth: 0.5))
+                        .frame(height: 27)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            }
+            .fixedSize()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

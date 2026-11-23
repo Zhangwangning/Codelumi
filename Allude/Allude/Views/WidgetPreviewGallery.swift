@@ -10,18 +10,73 @@ import WidgetKit
 // 按小组件尺寸渲染一次。因此这里不是手工复刻，是同一份实现。
 //
 // 两处使用：
-//   1) 「设置 › 桌面小组件」二级页 —— 开关下方直接铺开全部尺寸（2026-09-22 起，
-//      不再套「查看全部尺寸」的第二跳）；
+//   1) 款式详情页（`WidgetPresetDetailView`）—— 等比实际尺寸渲染**这一款**；
 //   2) `SCREEN=widgets` 命令行入口 —— 深/浅两套外观的验收截图都从这里出。
 //
-// 尺寸按设备过滤：iPhone 上没有 iPad 超大（690pt 宽）那一档，装在哪就渲染哪套；
-// 截图定位：`WIDGET_SIZE` 只渲染指定的那一块 —— 五个尺寸全铺出来是好几屏，
-// 一张截图只能拍到最上面一屏，靠滚动取证等于没取证。
+// 🔴 2026-11-22：原来的「全部尺寸铺开」改成「按款式铺开」。
+//    款式本身带尺寸（`WidgetPreset.family`），所以不再有「一个组件渲染五种尺寸」
+//    这种在真机上不存在的形态 —— 那是旧架构的遗留展示方式。
+//
+// 截图定位：`WIDGET_SIZE` 只渲染第一个匹配该尺寸的款式 —— 八块全铺出来是好几屏，
+// 代码截图只能拍到最上面一屏，靠滚动取证等于没取证。
 //
 // ⚠️ 本文件不得使用 SwiftUI 宏（#Preview / @State），原因见 DesignSystem.swift 顶部。
 // ============================================================================
 
+// MARK: - 款式 → 预览画布
+
+extension WidgetPreset {
+    /// 详情页里用来渲染等比预览的画布规格。
+    ///
+    /// 🔴 iPhone 上要把 iPad 横版超大（690×354）换成正版超大（338×690）：
+    ///    前者比手机屏还宽，渲染出来只能横向滚动着看，等于看不懂这一款。
+    ///    两款是同一内容口径，换画布不影响「这一款长什么样」的结论。
+    var canvasStyle: WidgetCanvas.Style {
+        if family == .systemExtraLarge, UIDevice.current.userInterfaceIdiom != .pad {
+            return .extraLargePortrait
+        }
+        switch family {
+        case .systemSmall: return .small
+        case .systemMedium: return .medium
+        case .systemLarge: return .large
+        case .systemExtraLargePortrait: return .extraLargePortrait
+        default: return .extraLarge
+        }
+    }
+}
+
 // MARK: - 仿真小组件容器
+
+/// 仿真小组件的**圆角半径** —— 单独抽成常量，因为有两个地方要用同一个曲率：
+/// ① `WidgetCanvas` 自己（预览块的形状）；
+/// ② 小组件设置页里包住预览块的**底色卡片**（2026-11-22 主人：
+///    「底色卡片的圆角和其中小组件的圆角曲率保持一致」）。
+///
+/// 🔴 必须是**同源**：早先卡片写死 20、预览块写死 24，卡片看着比里面的小组件更「方」，
+///    肉眼看得出两层圆角不同心。改任意一处都不能再各写各的数。
+enum WidgetCanvasMetrics {
+    static let cornerRadius: CGFloat = 24
+
+    /// 缩略图在给定容器里的等比缩放比。
+    ///
+    /// 🔴 与 `WidgetPresetThumbnail` 必须是**同一个算法**：那边拿它做 `scaleEffect`，
+    ///    这边拿它反算「圆角缩放后到底还剩多少 pt」。两处各算一遍迟早对不上。
+    static func thumbnailScale(base: CGSize, box: CGFloat, height: CGFloat) -> CGFloat {
+        guard base.width > 0, base.height > 0, box > 0, height > 0 else { return 1 }
+        return min(box / base.width, height / base.height)
+    }
+
+    /// 缩略图**在屏幕上呈现出来的**圆角半径。
+    ///
+    /// 🔴 2026-11-22 主人第二次指出「底色卡片的圆角还是没和里面小组件一致」——
+    ///    根因是「数值相同」不等于「观感相同」：
+    ///    小组件真实 158pt 宽配 24pt 圆角，缩进 88pt 的卡片后整体被缩到 0.56 倍，
+    ///    屏上的弧只剩 13.4pt；而底色卡片还是按 24pt 画，于是外层比内层更圆。
+    ///    所以卡片圆角取**缩放后的视觉半径**，两层弧才是同一条曲率。
+    static func visualCornerRadius(base: CGSize, box: CGFloat, height: CGFloat) -> CGFloat {
+        cornerRadius * thumbnailScale(base: base, box: box, height: height)
+    }
+}
 
 /// 把共享视图装进一个「长得像小组件」的框里。
 ///
@@ -63,11 +118,11 @@ struct WidgetCanvas: View {
 
         var title: String {
             switch self {
-            case .small: "小尺寸 · 最多 4 条"
-            case .medium: "中尺寸 · 3 条/页"
-            case .large: "大尺寸 · 8 条/页"
-            case .extraLarge: "超大 · 6 条/页"
-            case .extraLargePortrait: "iPhone 竖版超大 · 14 条/页"
+            case .small: "小尺寸"
+            case .medium: "中尺寸"
+            case .large: "大尺寸"
+            case .extraLarge: "iPad 超大"
+            case .extraLargePortrait: "超大"
             }
         }
 
@@ -84,48 +139,55 @@ struct WidgetCanvas: View {
 
         /// 宽于手机屏的尺寸（iPad 超大）需要横向滚动才看得到右半部分
         var overflowsPhoneWidth: Bool { size.width > 360 }
-
-        /// 对应的系统尺寸 —— 用来和 `WidgetPageSize.supportedFamilies` 对档位过滤
-        var family: WidgetFamily {
-            switch self {
-            case .small: .systemSmall
-            case .medium: .systemMedium
-            case .large: .systemLarge
-            case .extraLarge: .systemExtraLarge
-            case .extraLargePortrait:
-                // 竖版超大是 iOS 27 新增；低版本回落到同尺寸的横版枚举只为比对档位，
-                // 实际展示由 `supportedFamilies` 过滤掉，不会出现在系统小组件库里。
-                if #available(iOS 27.0, *) {
-                    .systemExtraLargePortrait
-                } else {
-                    .systemExtraLarge
-                }
-            }
-        }
     }
 
     let style: Style
     let content: AnyView
 
     /// `expandsToFill`：宽度吃满父视图（高度仍按 `style.size.height`）。
-    /// 设置页的「效果预览」只有一块、上面没有并排的兄弟视图，按固定 338pt 摆会
-    /// 左右各空 16pt 显得又瘦又小（2026-10-27 主人：「左右再加长一点点」）；
-    /// 图库里是多尺寸纵向排列，必须保持真实尺寸，所以默认仍是固定宽。
+    /// 用于只有一块预览、需要撑满版面的场合；
+    /// 多块并排时（款式库）必须保持真实宽度，所以默认仍是固定宽。
     var expandsToFill: Bool = false
 
+    /// 是否画投影。
+    ///
+    /// 🔴 款式库的缩略图传 **false**（2026-11-22 主人量的是「小组件的物理边缘到
+    ///    底色卡片的边缘」= 24pt）：投影向外扩 3~4pt，白卡里那圈 24pt 边距
+    ///    会被吃掉三分之一，看着只剩 20pt。白卡本身就是容器，不需要再浮一层。
+    ///    详情页 / 命令行截图仍用 true —— 那里没有白卡，要靠投影从页面背景上浮起来。
+    var showsShadow: Bool = true
+
     @Environment(\.colorScheme) private var colorScheme
+
+    // 🔴 2026-11-22 老大：「这两个开关要起到真实的作用啊，不是打开了而没有反应」——
+    //    根因就是**这块画布压根不读设置**：背景写死 `secondarySystemBackground`，
+    //    下面「设置 › 小组件」里怎么开都一个样，用户当然以为开关是假的。
+    //    这里用 `@AppStorage` 直接绑 App Group 的两个键，改开关 → 预览立刻重绘。
+    @AppStorage(WidgetBackgroundSetting.clearKey,
+                store: WidgetCanvas.groupDefaults) private var clearBackground = false
+    @AppStorage(WidgetBackgroundSetting.glassKey,
+                store: WidgetCanvas.groupDefaults) private var glassBackground = false
+
+    private static let groupDefaults =
+        PickupStorage.groupStore
+
+    private var background: WidgetBackground {
+        .resolve(clear: clearBackground, glass: glassBackground)
+    }
 
     init<Content: View>(_ style: Style,
                         padding: CGFloat = 16,
                         expandsToFill: Bool = false,
+                        showsShadow: Bool = true,
                         @ViewBuilder content: () -> Content) {
         self.style = style
         self.expandsToFill = expandsToFill
+        self.showsShadow = showsShadow
         self.content = AnyView(content().padding(padding))
     }
 
     private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: 24, style: .continuous)
+        RoundedRectangle(cornerRadius: WidgetCanvasMetrics.cornerRadius, style: .continuous)
     }
 
     var body: some View {
@@ -134,20 +196,14 @@ struct WidgetCanvas: View {
             .frame(width: expandsToFill ? nil : style.size.width,
                    height: style.size.height,
                    alignment: .topLeading)
-            // 与真实 WidgetKit 小组件同一套外观：实体底色 + 顶部主色氛围渐变，
-            // 不给小组件叠玻璃（玻璃只用于 App 的导航层）。
-            .background {
-                Color(.secondarySystemBackground)
-                    .overlay(alignment: .top) {
-                        LinearGradient(colors: [AppTheme.accent.opacity(0.10), .clear],
-                                       startPoint: .top, endPoint: .bottom)
-                            .frame(height: 88)
-                    }
-            }
+            // 与真实 WidgetKit 小组件同一套外观，四种背景态与 `WidgetSurface` 一一对应
+            .background { backgroundLayer }
             .clipShape(shape)
             // 🔴 2026-11-08 主人：预览和页面背景分不清 —— 给一张**软阴影 + 发丝描边**，
             //    这是 iOS 系统里「浮起卡片」的标准做法（比加深底色更像真机）。
-            .shadow(color: .black.opacity(colorScheme == .dark ? 0.45 : 0.10),
+            .shadow(color: showsShadow
+                        ? .black.opacity(colorScheme == .dark ? 0.45 : 0.10)
+                        : .clear,
                     radius: 12, y: 6)
             .overlay {
                 shape.stroke(.primary.opacity(colorScheme == .dark ? 0.10 : 0.06),
@@ -156,112 +212,174 @@ struct WidgetCanvas: View {
             // 🔴 描边 + 阴影（2026-10-27 主人：「下面都融在一起看不见底了」）：
             // `secondarySystemBackground` 与设置页的 `systemGroupedBackground`
             // 在浅色下几乎是同一个浅灰白，没有分离手段时小组件下边缘直接消失。
-            // 做法是两道都很轻：0.5pt 极淡描边负责"边界"，柔阴影负责"浮起"。
             .overlay {
                 shape.strokeBorder(Color(.separator).opacity(colorScheme == .dark ? 0.55 : 0.35),
                                    lineWidth: 0.5)
             }
-            .shadow(color: .black.opacity(colorScheme == .dark ? 0.50 : 0.12),
+            .shadow(color: showsShadow
+                        ? .black.opacity(colorScheme == .dark ? 0.50 : 0.12)
+                        : .clear,
                     radius: 12, y: 5)
             .allowsHitTesting(false)
     }
+
+    // MARK: 背景四态（与 `WidgetSurface` 同一套语义）
+
+    @ViewBuilder
+    private var backgroundLayer: some View {
+        switch background {
+        case .solid:
+            solidSurface
+        case .clear:
+            // 真透明：什么都不画，透出下面的底（桌面上就是壁纸）
+            Color.clear
+        case .glass:
+            // 只开玻璃 —— 底色还在，表面多一层材质
+            ZStack {
+                solidSurface
+                glassSurface
+            }
+        case .clearGlass:
+            // 两个都开 —— 全透明液态玻璃
+            glassSurface
+        }
+    }
+
+    private var solidSurface: some View {
+        AppTheme.cardSurface
+            .overlay(alignment: .top) {
+                LinearGradient(colors: [AppTheme.accent.opacity(0.10), .clear],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 88)
+            }
+    }
+
+    private var glassSurface: some View {
+        Rectangle()
+            .fill(.ultraThinMaterial)
+            .overlay(alignment: .top) {
+                LinearGradient(colors: [.white.opacity(0.22), .clear],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 72)
+            }
+    }
 }
 
-// MARK: - 全部尺寸目录（预览页与设置二级页共用）
+// MARK: - 款式渲染（详情页与目录页共用同一份分发逻辑）
 
-/// 「所有尺寸的小组件效果」这一块内容。
+/// 按款式渲染一块小组件内容。
 ///
-/// 从设置二级页与 `SCREEN=widgets` 入口两处抽出来的公共体 ——
-/// 渲染口径（同一份代码、同设备尺寸）只有这一份，铺开处各自包壳。
+/// 与 `PickupWidgetEntryView` 的分发逻辑**必须一致**（尺寸判断、空态、免费占位）——
+/// 这里唯一的差别是不读真实数据，只吃传进来的快照。
 ///
-/// 🔴 **2026-09-23 改口径：一律用示例数据，不再读用户的待取件。**
+/// 🔴 抽成独立视图而不是两处各写一遍：预览与桌面一旦漂移，
+///    就会出现「设置页看着好好的、桌面却不一样」的假象，那正是这个页面存在的意义所在。
+struct WidgetPresetContent: View {
+    let preset: WidgetPreset
+    let snapshot: WidgetSnapshot
+
+    var body: some View {
+        let isSmall = preset.family == .systemSmall
+
+        // 🔴 这里是**商品预览**，不是运行时，所以**不做档位判断** ——
+        //    始终渲染真实内容（示例数据）。
+        //
+        //    之前这里跟桌面一样画「解锁 Codelumi Pro」占位，结果是：免费用户在
+        //    图库里点开「待取总览」，满屏一个锁，根本看不到自己到底在买什么。
+        //    档位信息交给卡片名字前的小锁（`WidgetPresetCard`）表达就够了。
+        //
+        //    真的加到桌面后加不了这件事，由 `PickupWidgetEntryView` 渲染锁占位 ——
+        //    那是运行时状态，与这里的商品展示是两件事，不要混。
+        if snapshot.isEmpty {
+            WidgetEmptyContent(pickedTodayCount: snapshot.pickedTodayCount, compact: isSmall)
+        } else {
+            // 版式分发与桌面同一个视图（`WidgetLayoutContent`），不会再漂移。
+            WidgetLayoutContent(preset: preset,
+                                snapshot: snapshot,
+                                family: preset.family,
+                                pageKey: preset.canvasStyle.pageKey,
+                                pageSize: WidgetPageSize.rowCount(family: preset.canvasStyle.pageKey),
+                                options: preset.options)
+        }
+    }
+}
+
+/// 等比实际尺寸的预览画布（含超宽尺寸的横向滚动兜底）。
+struct WidgetPresetPreview: View {
+    let preset: WidgetPreset
+    var snapshot: WidgetSnapshot = .preview()
+    /// 卡片缩略图传 false —— 白卡就是容器，再叠投影会吃掉那圈 24pt 边距。
+    var showsShadow: Bool = true
+
+    var body: some View {
+        let canvas = WidgetCanvas(preset.canvasStyle, showsShadow: showsShadow) {
+            WidgetPresetContent(preset: preset, snapshot: snapshot)
+        }
+        if preset.canvasStyle.overflowsPhoneWidth {
+            ScrollView(.horizontal, showsIndicators: false) { canvas }
+        } else {
+            canvas
+        }
+    }
+}
+
+// MARK: - 全部款式目录（SCREEN=widgets 截图入口）
+
+/// 「所有款式」铺开。每块标题写清款式名与尺寸，下面渲染真实尺寸的小组件。
+///
+/// 🔴 **一律用示例数据，不读用户的待取件。**
 ///
 /// 起因是主人报的问题：这一页原先是「用你自己的数据渲染真实观感」，
 /// 但用户把件取完之后，设置页里整页预览全变成空态 ——
-/// 「小组件长什么样」这个页面在**最需要看它的时候**（想确认版式/想挑模板）
+/// 「小组件长什么样」这个页面在**最需要看它的时候**（想确认版式 / 想挑款式）
 /// 恰好什么都没有，等于把预览做废了。
-/// 现在这里永远铺 8 条示例记录：它展示的是**版式**，不是**你的数据**。
+/// 现在永远铺 14 条示例记录：它展示的是**版式**，不是**你的数据**。
 struct WidgetGalleryContent: View {
-    /// 显示内容配置。设置页传用户当前选择，使预览与桌面所见一致；
-    /// 不传时按当前档位取生效配置（免费版恒为完整形态）。
-    var options: WidgetDisplayOptions? = nil
-    /// 一页没填满时是否画灰色骨架行；设置页传当前开关值，让预览实时跟随。
-    var showsPlaceholders: Bool = WidgetPlaceholderSetting.isOn
-
-    private var effectiveOptions: WidgetDisplayOptions {
-        options ?? WidgetDisplayOptions.full
-    }
-
-    /// 示例快照：8 条，跨两页 —— 只有超过一页才看得出翻页控件对不对。
     private var snapshot: WidgetSnapshot { .preview() }
-
-    /// **只按设备过滤，不按档位裁剪**（2026-11-01 主人）。
-    ///
-    /// 原来免费版会把大尺寸整块藏掉，理由是不想让人到系统图库里找不到；
-    /// 但主人的口径是：**这里就应该把所有尺寸都摆出来**，
-    /// 免费版/Codelumi Pro 的差别是"能不能用"，不是"看不看得到"。
-    /// 所以现在全部渲染，付费档才有的尺寸挂一个「Codelumi Pro」标记并说明。
-    ///
-    /// 仍保留设备过滤：iPad 超大只存在于 iPad 桌面，iPhone 上渲染它等于展示一个加不出来的尺寸。
-    private var styles: [WidgetCanvas.Style] {
-        UIDevice.current.userInterfaceIdiom == .pad
-            ? WidgetCanvas.Style.allCases
-            : WidgetCanvas.Style.allCases.filter { $0 != .extraLarge }
-    }
-
-    /// 该尺寸在当前档位能不能用。免费版只有小 / 中（`WidgetPageSize.supportedFamilies`）。
-    private func isLocked(_ style: WidgetCanvas.Style) -> Bool {
-        !WidgetPageSize.supportedFamilies.contains(style.family)
-    }
 
     /// 内容区实测宽度（用来把小尺寸的左缘对齐到中尺寸卡片的左缘）
     @State private var contentWidth: CGFloat = 0
 
+    /// iPad 横版超大只在 iPad 上渲染（iPhone 装不下 690pt 宽的画布）。
+    private var presets: [WidgetPreset] {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        return WidgetPreset.all.filter { isPad || $0.family != .systemExtraLarge || $0.families.count > 1 }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 26) {
-            Text("待取件")
-                .font(.headline)
-                .padding(.top, 2)
-
-            // 档位说明（2026-11-01 主人）：这里展示**全部尺寸**，
-            // 免费版与Codelumi Pro 的差别只是"能不能加到桌面"，不是"看不看得到"。
-
-            ForEach(styles, id: \.rawValue) { style in
-                block(title: style.title) {
-                    // 🔴 2026-11-08 主人：除小尺寸外一律**水平居中**；
-                    //    小尺寸保持左对齐（与上方的分区标题同一条左边缘）。
+            ForEach(presets) { preset in
+                block(title: "\(preset.name) · \(preset.sizeName)尺寸") {
                     HStack(spacing: 0) {
                         // 🔴 2026-11-08 主人：小尺寸要和中尺寸的**左缘**对齐。
                         //    中尺寸是居中的，左缘 = (内容宽 − 中宽) / 2，小尺寸补同样的左缩进。
-                        if style == .small {
-                            let inset = max(0, (contentWidth - WidgetCanvas.Style.medium.size.width) / 2)
-                            Spacer().frame(width: inset)
+                        if preset.family == .systemSmall {
+                            Spacer().frame(width: max(0, (contentWidth - WidgetCanvas.Style.medium.size.width) / 2))
                         } else {
                             Spacer(minLength: 0)
                         }
 
                         ZStack(alignment: .topTrailing) {
-                            canvas(style: style, snapshot: snapshot)
-                                .opacity(isLocked(style) ? 0.55 : 1)
+                            WidgetPresetPreview(preset: preset, snapshot: snapshot)
                                 // 🔴 2026-11-08：尺寸从「估值」切到「实测」时会发生一次
                                 //    隐式过渡，动画中间帧看起来像两层文字叠在一起（乱套）。
                                 //    预览尺寸变化不需要动画，直接关掉。
                                 .transaction { $0.animation = nil }
 
-                            if isLocked(style) {
+                            if preset.needsPro && !EntitlementSnapshot.licensedPro {
                                 proBadge
                                     .padding(8)
                             }
                         }
 
-                        if style != .small { Spacer(minLength: 0) }
+                        if preset.family != .systemSmall { Spacer(minLength: 0) }
                     }
                 }
             }
 
             block(title: "空态：一件待取都没有时") {
                 HStack(spacing: 0) {
-                    // 与上面小/中/大尺寸同一条左缘（中尺寸居中带来的偏移要补上）
+                    // 与上面小 / 中尺寸同一条左缘（中尺寸居中带来的偏移要补上）
                     Spacer().frame(width: max(0, (contentWidth - WidgetCanvas.Style.medium.size.width) / 2))
                     WidgetCanvas(.small) {
                         WidgetEmptyContent(pickedTodayCount: 0, compact: true)
@@ -283,35 +401,6 @@ struct WidgetGalleryContent: View {
             proxy.size.width
         } action: { width in
             contentWidth = width
-        }
-    }
-
-    @ViewBuilder
-    private func canvas(style: WidgetCanvas.Style,
-                        snapshot: WidgetSnapshot) -> some View {
-        let content = WidgetCanvas(style) { widgetBody(style: style, snapshot: snapshot) }
-        if style.overflowsPhoneWidth {
-            // iPad 超大比手机屏还宽，不套横向滚动就只能看到左半截
-            ScrollView(.horizontal, showsIndicators: false) { content }
-        } else {
-            content
-        }
-    }
-
-    @ViewBuilder
-    private func widgetBody(style: WidgetCanvas.Style, snapshot: WidgetSnapshot) -> some View {
-        let compact = style == .small
-        if snapshot.isEmpty {
-            WidgetEmptyContent(pickedTodayCount: snapshot.pickedTodayCount,
-                               compact: compact)
-        } else if compact {
-            WidgetSmallContent(snapshot: snapshot, options: effectiveOptions)
-        } else {
-            WidgetPagedContent(snapshot: snapshot,
-                               pageSize: WidgetPageSize.rowCount(family: style.pageKey),
-                               familyKey: style.pageKey,
-                               options: effectiveOptions,
-                               showsPlaceholders: showsPlaceholders)
         }
     }
 
@@ -343,7 +432,9 @@ struct WidgetGalleryContent: View {
 // MARK: - 预览页（SCREEN=widgets 截图入口）
 
 struct WidgetPreviewGallery: View {
-    /// 截图定位：只渲染指定尺寸
+    /// 截图定位：只渲染该尺寸的第一款。
+    /// 值域仍是 `WidgetCanvas.Style` 的 rawValue（small / medium / large / …），
+    /// 这样 `tools/widget-shots.sh` 里的 `WIDGET_SIZE` 不用改。
     private var onlyStyle: WidgetCanvas.Style? {
         WidgetCanvas.Style(rawValue: ProcessInfo.processInfo.environment["WIDGET_SIZE"] ?? "")
     }
@@ -351,40 +442,35 @@ struct WidgetPreviewGallery: View {
     /// 是否处于 `SIMCTL_CHILD_SCREEN` 截图模式
     private var screenshotMode: Bool { ProcessInfo.processInfo.environment["SCREEN"] != nil }
 
-    /// 截图脚手架 `DISPLAY=full|codeOnly|companyOnly|stationOnly` 由
-    /// `AlludeApp.init()` 直接写进 App Group（走的是正式链路，
-    /// 所以设置页与这里看到的是同一份配置，不是两个特例）。
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 26) {
                 if let style = onlyStyle {
                     // 单块模式：截图验收用（示例数据，与目录页同一口径）
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("待取件 · \(style.title)")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                    if let preset = WidgetPreset.all.first(where: { $0.canvasStyle == style }) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("\(preset.name) · \(style.title)")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.secondary)
 
-                        WidgetCanvas(style) {
-                            galleryBody(style: style, snapshot: .preview())
+                            WidgetCanvas(style) {
+                                WidgetPresetContent(preset: preset, snapshot: .preview())
+                            }
                         }
                     }
                 } else {
                     WidgetGalleryContent()
 
                     // 命令行验证专用：真实数据往往缺少「极端组合」，这里用示例数据压测一次 ——
-                    // 最长凭证（15 位运单号）与最长标签（「特殊取件码」）同页出现时不折行、不溢出。
-                    if screenshotMode {
+                    // 最长凭证（15 位运单号）与最长副标题同页出现时不折行、不溢出。
+                    if screenshotMode,
+                       let preset = WidgetPreset.preset(id: "AlludeListStation") {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("压测：最长凭证 + 最长标签同页")
+                            Text("压测：最长凭证 + 最长副标题同页")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(.secondary)
 
-                            WidgetCanvas(.medium) {
-                                WidgetPagedContent(snapshot: .preview(),
-                                                   pageSize: WidgetPageSize.rowCount(family: "m"),
-                                                   familyKey: "m")
-                            }
+                            WidgetPresetPreview(preset: preset)
                         }
                     }
                 }
@@ -392,25 +478,7 @@ struct WidgetPreviewGallery: View {
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .navigationTitle("桌面小组件")
+        .navigationTitle("小组件")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    /// 单块模式的渲染体：与目录页同一份分发逻辑。
-    @ViewBuilder
-    private func galleryBody(style: WidgetCanvas.Style, snapshot: WidgetSnapshot) -> some View {
-        let options = WidgetDisplayOptions.full
-        let compact = style == .small
-        if snapshot.isEmpty {
-            WidgetEmptyContent(pickedTodayCount: snapshot.pickedTodayCount,
-                               compact: compact)
-        } else if compact {
-            WidgetSmallContent(snapshot: snapshot, options: options)
-        } else {
-            WidgetPagedContent(snapshot: snapshot,
-                               pageSize: WidgetPageSize.rowCount(family: style.pageKey),
-                               familyKey: style.pageKey,
-                               options: options)
-        }
     }
 }

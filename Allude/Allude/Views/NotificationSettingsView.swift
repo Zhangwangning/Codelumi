@@ -148,7 +148,7 @@ struct NotificationSettingsView: View {
             .padding(.top, 14)
             .padding(.bottom, 60)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.pageBackground)
         .navigationTitle("通知")
         .sheet(isPresented: $showPaywall) {
             NavigationStack { FullVersionView() }
@@ -188,8 +188,10 @@ struct NotificationSettingsView: View {
     private var toggleSection: some View {
         // 第一组也带组标题：三组（入库通知 / 定期 / 不定期）节奏一致，
         // 否则顶上一块无标题的卡会像是从上一页漏下来的。
-        SettingsGroup(title: "入库通知",
-                      note: "入库后弹一条：标题是取件码。") {
+        //
+        // 🔴 2026-11-22 主人：「标题清晰的就不要提示了」—— 「添加后发送通知」已经把
+        //    「什么时候发、发什么」说完了，原提示「入库后弹一条：标题是取件码。」删除。
+        SettingsGroup(title: "入库通知") {
             SettingsPlainRow(title: "添加后发送通知") {
                 Toggle("", isOn: Binding(get: { model.isEnabled },
                                          set: { model.setEnabled($0) }))
@@ -238,8 +240,9 @@ struct NotificationSettingsView: View {
     // MARK: 定期提醒
 
     private var dailySection: some View {
-        SettingsGroup(title: "提醒 · 每天固定",
-                      note: "到点数一遍待取件，没取的才响。") {
+        // 🔴 2026-11-22 主人：删掉「到点数一遍待取件，没取的才响。」
+        //    开关名字已经把「每天定时」说清楚，后半句只是把实现讲了一遍。
+        SettingsGroup(title: "提醒 · 每天固定") {
             SettingsPlainRow(title: "每天定时提醒") {
                 Toggle("", isOn: Binding(get: { model.dailyEnabled },
                                          set: { model.setDailyEnabled($0) }))
@@ -278,18 +281,24 @@ struct NotificationSettingsView: View {
                 Button {
                     onSelect(hours)
                 } label: {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
+                        // 🔴 2026-11-22 主人（对照小组件尺寸菜单）：「这个是不是也可以改成这样」。
+                        //    改成**对号占固定左槽、文字左对齐**：没选中的行也留同样一段空槽，
+                        //    所以每一行「n 小时」的起点一致，选不选中都不会左右挪。
+                        //
+                        //    ⚠️ 这条覆盖 2026-10-27 的旧口径（当时要把对号推到最右、还要 Apple 蓝）。
+                        //    颜色保留 Apple 蓝（系统语义色 systemBlue），只改位置与占位方式。
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color(.systemBlue))
+                            .opacity(hours == current ? 1 : 0)
+                            .frame(width: 18, alignment: .center)
+
                         Text("\(hours) 小时")
                             .font(.system(size: 16))
                             .foregroundStyle(.primary)
 
-                        Spacer(minLength: 20)
-
-                        if hours == current {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(Color(.systemBlue))
-                        }
+                        Spacer(minLength: 0)
                     }
                     .padding(.horizontal, 16)
                     .frame(width: 168, height: 42)
@@ -345,8 +354,10 @@ struct NotificationSettingsView: View {
     // MARK: 不定期提醒
 
     private var pendingSection: some View {
+        // 🔴 2026-11-22 主人：长句压成一句。「超过设定时长催一次；开启重复后按间隔继续催，
+        //    所有件取完自动停。」里只有「取完自动停」是用户猜不到的，其余都是标题的复述。
         SettingsGroup(title: "提醒 · 超时未取",
-                      note: "超过设定时长催一次；开启重复后按间隔继续催，所有件取完自动停。") {
+                      note: "取完自动停。") {
             SettingsPlainRow(title: "超时未取提醒") {
                 gatedToggle(isOn: model.pendingEnabled, label: "超时未取提醒") {
                     model.setPendingEnabled($0)
@@ -418,14 +429,23 @@ struct NotificationSettingsView: View {
     ///   · 只有该驿站还存在待取件时才推通知，没件不打扰；
     ///   · 位置只存本机，不上传、不记录轨迹。
     private var labSection: some View {
+        // 🔴 2026-11-22 主人：三段长说明压成一句。留下的三件都是标题说不出来的：
+        //    实验性（预期管理）、位置只在本机（隐私承诺）、20 个上限（硬限制）。
+        //    「需始终允许定位」删了 —— 打开开关时系统自己的权限弹窗会讲，
+        //    写在这里既不准确（用户可以选「使用期间」）也不及时。
         SettingsGroup(
-            title: "实验室 · 到达提醒",
-            note: "实验性：系统定位可能有几分钟延迟，离线、低电量或定位精度差时可能不触发。位置只存本机、不上传、不记录轨迹；需「始终允许」定位权限，最多同时监控 20 个驿站。"
+            // 2026-11-22 主人：「把所有实验室功能的都改成一样的标签来标记」——
+            // 标题里的「实验室 · 」前缀退役，改挂统一的 `LabBadge`（见 SectionHeader.isLab）。
+            title: "到达提醒",
+            // 徽章已经说了"实验室"，note 里不再重复「实验性，」三个字
+            note: "可能延迟几分钟；位置只存本机，最多 20 个驿站。",
+            isLab: true
         ) {
-            SettingsPlainRow(title: "到达提醒") {
+            SettingsPlainRow(title: "开启提醒") {
                 // 🔴 老大 2026-11-16 补充：到达提醒也是 Codelumi Pro；
                 //    非 Pro 点开关直接弹订阅页，不显示加锁标志（同一套 gatedToggle）。
-                gatedToggle(isOn: model.arrivalEnabled, label: "到达提醒") {
+                // 2026-11-22：分组标题已经是「到达提醒」，行内再写一遍就是重复，改叫「开启提醒」。
+                gatedToggle(isOn: model.arrivalEnabled, label: "开启提醒") {
                     model.setArrivalEnabled($0)
                 }
             }
@@ -519,7 +539,7 @@ struct NotificationSettingsView: View {
             Image(systemName: "mappin.slash.circle.fill")
                 .font(.system(size: 13))
                 .foregroundStyle(.tertiary)
-            Text("还没有驿站设置位置。到「驿站管理」点任意驿站（含内置）标记位置，回来就能在这里启用。")
+            Text("还没有驿站设置位置。到「驿站管理」标记位置后即可启用。")
                 .font(AppTheme.TypeScale.note)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

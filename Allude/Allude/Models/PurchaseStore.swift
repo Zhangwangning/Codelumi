@@ -85,7 +85,17 @@ final class PurchaseStore: ObservableObject {
     /// 界面与商品请求都不再出现它。
     static var displayedPlans: [Plan] { [.lifetime, .yearly] }
 
-    static var allProductIDs: [String] { displayedPlans.map(\.productID) }
+    /// 限时促销用的「永久会员」——ASC 里单独建的非消耗型（`…pro.lifetime.99`）。
+    ///
+    /// 🔴 2026-11-23 老大要在某段时间里用 9.9 卖永久：内购**没有折扣工具**，
+    ///    唯一干净的做法是单独建一个商品、活动期在售、结束下架。
+    ///    所以它**不进界面列表**（不出现第二张卡），只做两件事：
+    ///    ① 在售时替 `lifetime` 接单（价格自然就是促销价）；
+    ///    ② 买了它同样算 Pro 永久（下面 `allProductIDs` 一并纳入权益判定）。
+    static let promoLifetimeProductID = "com.jikezhang.allude.pro.lifetime.99"
+
+    /// 请求商品与判定权益时用的全集 —— 比界面展示的多一个促销款。
+    static var allProductIDs: [String] { displayedPlans.map(\.productID) + [promoLifetimeProductID] }
 
     // MARK: 状态
 
@@ -114,7 +124,18 @@ final class PurchaseStore: ObservableObject {
     /// 某档的商店价格；取不到就是 nil，界面显示「—」并禁用按钮。
     /// **不要写死价格**：定价在 App Store Connect 改，代码里写死就对不上。
     func price(for plan: Plan) -> String? {
-        products[plan.productID]?.displayPrice
+        products[resolvedProductID(for: plan)]?.displayPrice
+    }
+
+    /// 这一档实际生效的商品 ID。
+    ///
+    /// 买断档优先用限时款：它下架后 StoreKit 就取不到，这里自动回落到常驻款 ——
+    /// 活动结束不需要改代码、也不需要发版。
+    func resolvedProductID(for plan: Plan) -> String {
+        if plan == .lifetime, products[Self.promoLifetimeProductID] != nil {
+            return Self.promoLifetimeProductID
+        }
+        return plan.productID
     }
 
     var canPurchase: Bool { !products.isEmpty }
@@ -180,7 +201,7 @@ final class PurchaseStore: ObservableObject {
     // MARK: 购买 / 恢复
 
     func purchase(_ plan: Plan) async {
-        guard let product = products[plan.productID] else {
+        guard let product = products[resolvedProductID(for: plan)] else {
             message = "商品还没加载好，请稍后重试"
             return
         }

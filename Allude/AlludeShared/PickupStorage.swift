@@ -41,11 +41,41 @@ enum PickupStorage {
     static let listSortKey = "allude.list.sort"
 
     /// 共享偏好域：App Group 优先；小组件进程读同一个域。
-    static var sharedDefaults: UserDefaults {
-        UserDefaults(suiteName: appGroupID) ?? .standard
+    ///
+    /// 🔴 2026-11-23（老大：「点了开关页面不实时变化，要退出去再进来」）：
+    ///    `@AppStorage` 的变更通知是**按 UserDefaults 实例**投递的 ——
+    ///    `UserDefaults(suiteName:)` 每调一次就是新实例，两个实例虽然读写同一份 plist，
+    ///    A 写入**不会**通知绑在 B 上的 `@AppStorage`。以前每处各自 `UserDefaults(suiteName:)`，
+    ///    于是「开关写了、界面不动、重启才生效」。
+    ///    → 全 App 只保留这**一个**实例，所有需要实时联动的绑定点都用它。
+    static let groupStore: UserDefaults = UserDefaults(suiteName: appGroupID) ?? .standard
+
+    static var sharedDefaults: UserDefaults { groupStore }
+
+    // MARK: 分组方向（2026-11-23 定：公司 / 驿站都只保留「A→Z ⇄ Z→A」一个方向位）
+    static let companyAscKey = "allude.sort.companyAscending"
+    static let stationAscKey = "allude.sort.stationNameAscending"
+
+    static var companyAscending: Bool {
+        groupStore.object(forKey: companyAscKey) as? Bool ?? true
+    }
+    static var stationNameAscending: Bool {
+        groupStore.object(forKey: stationAscKey) as? Bool ?? true
+    }
+    static func toggleCompanyDirection() {
+        groupStore.set(!companyAscending, forKey: companyAscKey)
+    }
+    static func setCompanyAscending(_ value: Bool) {
+        groupStore.set(value, forKey: companyAscKey)
+    }
+    static func setStationNameAscending(_ value: Bool) {
+        groupStore.set(value, forKey: stationAscKey)
+    }
+    static func toggleStationDirection() {
+        groupStore.set(!stationNameAscending, forKey: stationAscKey)
     }
 
-    /// 当前排序方式（未知值一律回落「最近收到」）。
+    /// 当前排序方式（未知值一律回落「最新收到」）。
     static var listSort: PickupSortLogic.Mode {
         let raw = sharedDefaults.string(forKey: listSortKey)
             ?? UserDefaults.standard.string(forKey: listSortKey)
@@ -341,35 +371,11 @@ enum WidgetPageSize {
         }
     }
 
-    /// 小组件注册的尺寸集 —— 参数化注册后四类小组件共用同一份。
+    /// 小组件**注册的尺寸集** —— 参数化注册时代四类小组件共用一份。
     ///
-    /// 🔴 2026-10-30 主人定：**免费版只给小 / 中两个尺寸**。
-    ///    大尺寸与超大尺寸一屏 6–10 条，等于把「免费只看 3 条」的限制从桌面绕过去；
-    ///    而且中尺寸一页正好 3 条，与 App 内的同屏上限对得上。
-    ///
-    /// 判定读小组件进程自己的 `EntitlementSnapshot.licensedPro`，不依赖主 App 运行。
-    ///
-    /// 🔴 **2026-11-11 内测反馈修复：一律注册全部尺寸，不再按档位裁剪。**
-    ///    WidgetKit 在**注册时**就缓存了 `supportedFamilies`，买完 Pro 也不会
-    ///    动态变大 —— 用户看到的现象就是「已购会员后仍然只有小/中两个尺寸」。
-    ///    现在尺寸集固定为全部，免费用户在大尺寸里渲染「解锁 Codelumi Pro」占位
-    ///    （见 `WidgetLockedContent`）；购买后小组件重新取时间线即可显示内容，
-    ///    不需要删掉重加，也不需要重装 App。
-    static var supportedFamilies: [WidgetFamily] {
-        allFamilies
-    }
-
-    /// 付费档：全部尺寸。
-    /// 🔴 部署目标已降到 iOS 26：`systemExtraLargePortrait`（竖版超大）是 iOS 27 新增，
-    ///    低版本系统上取这个枚举会崩，所以按可用性拼装。
-    private static var allFamilies: [WidgetFamily] {
-        var families: [WidgetFamily] = [.systemSmall, .systemMedium,
-                                        .systemLarge, .systemExtraLarge]
-        if #available(iOS 27.0, *) {
-            families.append(.systemExtraLargePortrait)
-        }
-        return families
-    }
+    /// 🔴 2026-11-22 重构后**已退场**：每个款式（`WidgetPreset`）自己声明一个尺寸，
+    ///    不再有「一个组件吃掉全部尺寸」的注册方式。只剩免费 / 付费的档位判定，
+    ///    见下面的 `freeFamilies` / `isFreeFamily`（供 `WidgetPreset.needsPro` 用）。
 
     /// 免费档：只有小 / 中。
     static let freeFamilies: [WidgetFamily] = [.systemSmall, .systemMedium]
@@ -378,20 +384,36 @@ enum WidgetPageSize {
     static func isFreeFamily(_ family: WidgetFamily) -> Bool {
         freeFamilies.contains(family)
     }
-
-    /// 补位空槽的**数量上限**。
-    ///
-    /// 空槽的作用是「补齐一页」并稳定行高，不是「填满整块」。按缺几补几的话，
-    /// 竖版超大尺寸（一页 10 行）里只有 5 条数据时会铺出 5 行鬼影，
-    /// 半个屏幕都是灰条 —— 看起来像组件坏了，而不是「就这些了」。
-    /// 2 个足够传达「还有空位」，多出来的空间交给行高自然撑开。
-    static let maxPlaceholderRows = 2
 }
 
 // MARK: - 小组件展示快照
 //
 // 小组件进程与主 App 是两个独立进程且启动时机不可控，因此不能复用 PickupStore。
 // 这里定义「小组件需要知道的最小事实」，由小组件在渲染时直接从 App Group 反序列化。
+
+/// 一个驿站的待取件数（小尺寸「驿站分布」用）。
+struct StationCount: Identifiable {
+    let name: String
+    let count: Int
+    var id: String { name }
+}
+
+/// 某一天的到件统计（大尺寸「取件进度」的年热力网格用）。
+///
+/// 红 = 那天还有没取的（越深未取越多）· 绿 = 那天全取完了 · 浅灰 = 那天没件。
+struct WidgetDayStat: Identifiable, Hashable {
+    /// 月份 1…12
+    let month: Int
+    /// 几号 1…31
+    let day: Int
+    /// 当天收到的短信条数（含已取，所有状态）
+    let total: Int
+    /// 其中还没取走的
+    let pending: Int
+    /// 网格查表用的复合键（`month * 100 + day`），避免每天插一次字符串
+    var key: Int { month * 100 + day }
+    var id: Int { key }
+}
 
 struct WidgetSnapshot {
     /// 待办，**已按档位裁剪**（免费 4 条 / 付费至多 60 条），按时间倒序。
@@ -404,6 +426,31 @@ struct WidgetSnapshot {
     /// 「一张卡片多个取件码」开启时，代表记录 ID → 同组其它码。
     /// 小组件一行画不下整组，所以主码后补几个小号码；头部计数仍是**真实件数**。
     var extraCodes: [String: [String]] = [:]
+    /// 今天**到件**且还没取走的件数（按 `receivedAt` 算）。
+    ///
+    /// 与 `pickedTodayCount`（今天**取走**的）是一对，不是同一个数：
+    /// 「今日到件 5 / 今日已取 2」才说得清今天发生了什么。
+    /// 必须在这里算好 —— 不能在视图里对 `items` 现数，`items` 是**按档位裁过的**
+    /// （免费 4 条），数出来永远是 ≤4。
+    var pendingTodayCount: Int = 0
+    /// 待取件按驿站分组，已按件数降序、最多 4 组（第 4 组是「其他」）。
+    /// 小尺寸「驿站分布」用它，同样不能从裁过的 `items` 现数。
+    var stationCounts: [StationCount] = []
+    /// 压得最久的那一件（`receivedAt` 最早）。小尺寸「最久未取」用它。
+    var oldestPending: PickupRecord? = nil
+
+    /// 本年**有件的那几天**的统计（无件的天不在数组里，网格按天查表补空白）。
+    ///
+    /// 🔴 2026-11-22 老大（大尺寸「取件进度」）：
+    ///    「直接做成月头到月底的折线图」→「改成本年的 365 天的圆点，
+    ///      和刚才的日期圆点的显示规则一样」。所以按**年**统计，
+    ///    12 行（月）× 31 列（日）= 372 个格子，圆点三态见 `WidgetDayStat`。
+    var yearDays: [WidgetDayStat] = []
+    /// 今天几月 / 几号（网格上给今天描一圈）
+    var todayMonth: Int = 0
+    var todayDay: Int = 0
+    /// 今年一共几天（365 / 366）
+    var yearDayCount: Int = 365
 
     static let empty = WidgetSnapshot(items: [], pendingTotal: 0, pickedTodayCount: 0)
 
@@ -448,7 +495,93 @@ struct WidgetSnapshot {
         return WidgetSnapshot(items: Array(shown.prefix(cap)),
                               pendingTotal: pending.count,
                               pickedTodayCount: pickedToday,
-                              extraCodes: extras)
+                              extraCodes: extras,
+                              pendingTodayCount: pendingTodayCount(in: pending),
+                              stationCounts: stationBreakdown(of: pending),
+                              oldestPending: oldest(in: pending),
+                              yearDays: yearBreakdown(of: all),
+                              todayMonth: Calendar.current.component(.month, from: Date()),
+                              todayDay: Calendar.current.component(.day, from: Date()),
+                              yearDayCount: yearDayCount())
+    }
+
+    /// 今天到件、还没取走的件数。
+    private static func pendingTodayCount(in pending: [PickupRecord]) -> Int {
+        pending.filter { Calendar.current.isDateInToday($0.receivedAt) }.count
+    }
+
+    /// 本年每天的到件统计 —— **全量记录**（含已取），只保留有件的天。
+    private static func yearBreakdown(of all: [PickupRecord]) -> [WidgetDayStat] {
+        let calendar = Calendar.current
+        let now = Date()
+        var total: [Int: Int] = [:]
+        var pending: [Int: Int] = [:]
+        for record in all where calendar.isDate(record.receivedAt, equalTo: now, toGranularity: .year) {
+            let parts = calendar.dateComponents([.month, .day], from: record.receivedAt)
+            guard let month = parts.month, let day = parts.day else { continue }
+            let key = month * 100 + day
+            total[key, default: 0] += 1
+            if !record.isPickedUp { pending[key, default: 0] += 1 }
+        }
+        return total.keys.sorted().map { key in
+            WidgetDayStat(month: key / 100,
+                          day: key % 100,
+                          total: total[key] ?? 0,
+                          pending: pending[key] ?? 0)
+        }
+    }
+
+    /// 本月 1 号是周几（1 = 周日 … 7 = 周六）
+    /// 今年一共几天（2 月闰年 29 天 → 366）
+    static func yearDayCount() -> Int {
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: Date())
+        var components = DateComponents()
+        components.year = year
+        components.month = 1
+        components.day = 1
+        guard let first = calendar.date(from: components),
+              let range = calendar.range(of: .day, in: .year, for: first) else { return 365 }
+        return range.count
+    }
+
+    /// 待取件按驿站分布：件数降序，前 3 个实名，剩下的并成「其他」。
+    ///
+    /// 为什么并成「其他」而不是继续列：小尺寸只有 126pt 内容高，
+    /// 一屏最多 3 行，第 4 行开始就只能靠猜 —— 不如把尾巴收成一个数。
+    static func stationBreakdown(of pending: [PickupRecord]) -> [StationCount] {
+        var tally: [String: Int] = [:]
+        for record in pending {
+            let name = PickupSortLogic.stationName(of: record)
+            // ① 有驿站就按驿站分组（用户是"去某个门取件"，驿站才是他要找的那一层）；
+            // ② 没有驿站时退到**快递公司**，而不是并成一个「未标注驿站」——
+            //    一个 10 件的「未标注驿站」条形图等于什么也没告诉用户，
+            //    而「京东 3 件」至少能让他判断"是不是我的那单"。
+            //    这也是预览数据的实际观感问题：示例里一半地址不含驿站关键词，
+            //    不退到公司的话，图库里这一款的示例永远是「未标注驿站 10」。
+            let key: String
+            if name != PickupSortLogic.noStation {
+                key = name
+            } else {
+                let company = PickupSortLogic.companyName(of: record)
+                key = company.isEmpty ? "未分类" : company
+            }
+            tally[key, default: 0] += 1
+        }
+        // 件数相同时按名字排，保证同一份数据每次画出来顺序一致
+        // （Swift 的 `sorted` 不稳定，不写次级比较就会出现桌面刷新后换序）。
+        let sorted = tally.sorted {
+            $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value
+        }
+        var result = sorted.prefix(3).map { StationCount(name: $0.key, count: $0.value) }
+        let rest = sorted.dropFirst(3).reduce(0) { $0 + $1.value }
+        if rest > 0 { result.append(StationCount(name: "其他", count: rest)) }
+        return result
+    }
+
+    /// 压得最久的一件 = `receivedAt` 最早的那条。
+    private static func oldest(in pending: [PickupRecord]) -> PickupRecord? {
+        pending.min { $0.receivedAt < $1.receivedAt }
     }
 
     var isEmpty: Bool { items.isEmpty }
@@ -472,12 +605,6 @@ struct WidgetSnapshot {
         let start = clampedPage(page, pageSize: size) * size
         guard start < items.count else { return [] }
         return Array(items[start ..< min(start + size, items.count)])
-    }
-
-    /// 本页空槽数量（稳定行高用，上限见 `WidgetPageSize.maxPlaceholderRows`）
-    func placeholderRows(page: Int, pageSize: Int) -> Int {
-        min(max(0, pageSize - pageItems(page, pageSize: pageSize).count),
-            WidgetPageSize.maxPlaceholderRows)
     }
 }
 
@@ -806,149 +933,67 @@ struct EntitlementSnapshot: Codable, Equatable {
 //    但**已经没有读它的地方了** —— 删 UI 的同时必须删读侧门控，
 //    只删 UI 会让 `false` 变成永久锁死。这条是删开关类功能的标准动作。
 
-// MARK: - 小组件显示内容（2026-10-27 改为五个开关）
+// MARK: - 小组件显示内容（2026-11-22 退化为纯值对象）
 //
-// 需求原话：「下面的显示内容的开关勾选直接做成开关：完整信息、显示取件地址、
-// 显示快递公司、显示驿站、显示快递柜/货架这五个开关，完整信息与下面的互斥，
-// 事实上与之前一样，但是形式变了」。
+// 历史：2026-10-27 这里曾是「六个开关 + 落盘 widget-display.json」的用户配置。
+// 2026-11-22 晚：显示内容**又回到用户开关**（但不再存这个结构体）——
+// 「清单款」（中 / 大 / 超大）的每行显示什么由 `WidgetDisplaySetting` 的
+// 三个布尔键决定，本类型只是它们在进程内的**值对象**。
+//   · 旧的 `widget-display.json` 与 `load()` / `save()` 已删，不再被任何代码读取；
+//   · 小尺寸的三个固定变体（`.codeAndLocker` / `.station` / `.company`）走静态常量，
+//     与本类型无关 —— 158pt 里塞不下三段信息，开关化没有意义。
 //
-// 三条口径：
-//   ① 🔴 **取件码永不参与配置** —— 它是这个小组件存在的唯一理由，
-//      一个能把自己关掉的开关不叫设置，叫故障源。所以这里没有它的位置；
-//   ② **「完整信息」= 其余四项全开**，是快捷全开 / 全关的 master 开关。
-//      它与下面四项天然互斥：关掉任何一项，它就不再是全开、自己变回未选中，
-//      不需要额外禁用或联动代码 —— 状态本身就是唯一真相；
-//   ③ **驿站与地址互斥显示**（见 `PickupRecord.widgetSubtitle`：站名本来就是
-//      地址的尾段，两个都画等于同一段字出现两次）。
-//
-// ⚠️ 跨进程契约（与 `EntitlementSnapshot` 同一纪律）：字段只增不改，
-//    新增字段必须有解码兜底，否则老配置会让整份选项解不出来 → 静默回落到默认。
+// 🔴 与 `EntitlementSnapshot` 不同，这个类型**不是**跨进程契约 ——
+//    它只在进程内构造，格式怎么变都安全（跨进程的是三个独立布尔键）。
 
-/// 小组件空槽（灰色占位骨架行）是否显示。
+/// 小组件每行显示哪几项。
 ///
-/// 默认显示：不足一页时补空槽，本来是想表达「就这些了」，
-/// 但有用户反馈「以为是还有快递没显示出来」（2026-11-14），
-/// 所以给一个开关让用户自己决定。
-enum WidgetPlaceholderSetting {
-    static let key = "allude.widget.showPlaceholders"
-
-    /// 读 App Group。缺失时按 `true` —— 与历史行为一致。
-    static var isOn: Bool {
-        UserDefaults(suiteName: PickupStorage.appGroupID)?
-            .object(forKey: key) as? Bool ?? true
-    }
-
-    /// 只落盘，不 reload；调用方负责 `WidgetCenter.shared.reloadAllTimelines()`。
-    static func set(_ on: Bool) {
-        UserDefaults(suiteName: PickupStorage.appGroupID)?.set(on, forKey: key)
-    }
-}
-
-/// 小组件显示哪几项。
-struct WidgetDisplayOptions: Codable, Equatable {
+/// 两个静态常量保留给「没有款式上下文」的调用点（灵动岛、分享卡、预览兜底）。
+struct WidgetDisplayOptions: Hashable {
     /// 快递公司（顺丰速运 / 圆通快递…；判别不出时退回短信平台）
     var showsCompany: Bool
     /// 驿站 / 网点短名（从地址里提取，见 `PickupRecord.station`）
     var showsStation: Bool
     /// 取件地址（完整门牌）
     var showsAddress: Bool
-    /// 快递柜格口 / 货架（取件码**后面**那一位，2026-10-27 新增）
+    /// 快递柜格口 / 货架（取件码**后面**那一位）
     var showsLocker: Bool
 
-    /// 四项全开 —— 页面上的「完整信息」，也是升级前的默认版式。
-    /// 站名此时被地址盖住（互斥规则），所以视觉与旧版完整模板完全一致。
+    /// 四项全开 —— 改版前的默认版式（灵动岛与 App 内预览沿用这一档）。
     static let full = WidgetDisplayOptions(showsCompany: true,
                                           showsStation: true,
                                           showsAddress: true,
                                           showsLocker: true)
 
-    /// 四项全关 —— 只剩取件码，第二行整行不画、码后柜位也不画。
+    /// 四项全关 —— 只剩取件码。
     static let codeOnly = WidgetDisplayOptions(showsCompany: false,
                                               showsStation: false,
                                               showsAddress: false,
                                               showsLocker: false)
 
-    /// 四项全开 ⇒「完整信息」为开。互斥判断就靠这一条，不需要额外状态位。
-    var isComplete: Bool {
-        showsCompany && showsStation && showsAddress && showsLocker
-    }
+    /// 小尺寸变体一：只有码（柜位仍显 —— 它跟码同一行，不占额外宽度）。
+    static let codeAndLocker = WidgetDisplayOptions(showsCompany: false,
+                                                   showsStation: false,
+                                                   showsAddress: false)
 
-    private static let fileName = "widget-display.json"
+    /// 小尺寸变体二：码 + 驿站。
+    static let station = WidgetDisplayOptions(showsCompany: false,
+                                              showsStation: true,
+                                              showsAddress: false)
 
-    private static var fileURL: URL {
-        PickupStorage.directory.appendingPathComponent(fileName)
-    }
+    /// 小尺寸变体三：码 + 快递公司。
+    static let company = WidgetDisplayOptions(showsCompany: true,
+                                              showsStation: false,
+                                              showsAddress: false)
 
-    private enum CodingKeys: String, CodingKey {
-        case showsCompany, showsStation, showsAddress, showsLocker
-    }
+    /// 第二行整行都不画（小尺寸据此决定画 4 条还是 3 条）。
+    var isCodeOnly: Bool { !showsCompany && !showsStation && !showsAddress }
 
-    /// `showsLocker` 给默认值：新增字段若设成必填，老调用点全要改。
     init(showsCompany: Bool, showsStation: Bool, showsAddress: Bool, showsLocker: Bool = true) {
         self.showsCompany = showsCompany
         self.showsStation = showsStation
         self.showsAddress = showsAddress
         self.showsLocker = showsLocker
-    }
-
-    /// 🔴 手写解码：每个字段都给默认值。
-    /// 以后往这里加字段时，老配置文件缺键也不会让整份选项解码失败。
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        showsCompany = (try? container.decodeIfPresent(Bool.self, forKey: .showsCompany)) ?? true
-        showsStation = (try? container.decodeIfPresent(Bool.self, forKey: .showsStation)) ?? false
-        showsAddress = (try? container.decodeIfPresent(Bool.self, forKey: .showsAddress)) ?? true
-        // 老配置没有这个键 → 默认显示（升级前柜位一直显示，不能因为加了开关就消失）
-        showsLocker = (try? container.decodeIfPresent(Bool.self, forKey: .showsLocker)) ?? true
-    }
-
-    static func load() -> WidgetDisplayOptions {
-        guard let data = try? Data(contentsOf: fileURL) else { return .full }
-        return (try? JSONDecoder().decode(WidgetDisplayOptions.self, from: data)) ?? .full
-    }
-
-    @discardableResult
-    static func save(_ options: WidgetDisplayOptions) -> Bool {
-        do {
-            try FileManager.default.createDirectory(at: PickupStorage.directory,
-                                                    withIntermediateDirectories: true)
-            try JSONEncoder().encode(options).write(to: fileURL, options: .atomic)
-            return true
-        } catch {
-            return false
-        }
-    }
-}
-
-// MARK: - 预设组合（2026-10-27 起只服务脚手架）
-
-/// 小组件显示内容的**预设组合**。
-///
-/// 设置页改成五个开关后，这里不再是"给人挑的模板"，只剩一个用途：
-/// `DISPLAY=full|codeOnly|companyOnly|stationOnly` 脚手架一次性写入某种组合，
-/// 让命令行能截到特定版式。保留命名是为了回归时能直接说"codeOnly 有没有变"。
-///
-/// ⚠️ 曾经还有 `.custom` 与 `title/subtitle/symbol/selectable` —— 那是四选一单选行
-///    的配套，开关化之后全部失去消费者，已删（零死代码）。
-enum WidgetDisplayPreset: String, CaseIterable {
-    case full
-    case codeOnly
-    case companyOnly
-    case stationOnly
-
-    var options: WidgetDisplayOptions {
-        switch self {
-        case .full:
-            return .full
-        case .codeOnly:
-            return .codeOnly
-        case .companyOnly:
-            return WidgetDisplayOptions(showsCompany: true, showsStation: false,
-                                        showsAddress: false, showsLocker: true)
-        case .stationOnly:
-            return WidgetDisplayOptions(showsCompany: true, showsStation: true,
-                                        showsAddress: false, showsLocker: true)
-        }
     }
 }
 
@@ -960,11 +1005,22 @@ enum WidgetDisplayPreset: String, CaseIterable {
 // 放在 AlludeShared 里两边共用；原始值必须与 `PickupSortMode` 一致。
 
 enum PickupSortLogic {
-    enum Mode: String {
-        case newest = "最近收到"
-        case oldest = "最早收到"
-        case company = "按快递公司"
-        case station = "按快递驿站"
+    enum Mode: String, CaseIterable {
+        case newest, oldest, company, station
+
+        /// 菜单文案：公司和驿站会把当前方向写进去，用户一眼看到"再点一次会怎样"。
+        var title: String {
+            switch self {
+            case .newest:  return "最新收到"
+            case .oldest:  return "最早收到"
+            // 2026-11-23 老大：方向用上下箭头表示（↑ = A→Z / 件数多的在前，↓ = 反过来），
+            // 驿站不再写"件多在前"那几个字。
+            case .company:
+                return PickupStorage.companyAscending ? "按快递公司 ↑" : "按快递公司 ↓"
+            case .station:
+                return PickupStorage.stationNameAscending ? "按快递驿站 ↑" : "按快递驿站 ↓"
+            }
+        }
     }
 
     /// 未标注驿站时的分组名（与 App 内一致）
@@ -1003,29 +1059,42 @@ enum PickupSortLogic {
     }
 
     /// 稳定排序：同组内仍按「最近收到」倒序。
+    /// 统一排序口径（2026-11-23 老大定稿，待取 / 已取 / 小组件 / 灵动岛 / 锁屏卡共用）。
+    ///
+    /// ``` 
+    /// 最新收到   receivedAt 降序，同刻 → 取件码 0-9、A-Z 升序
+    /// 最早收到   receivedAt 升序，同刻 → 取件码 0-9、A-Z 升序（不跟着反转）
+    /// 按快递公司  公司名 A→Z / Z→A（第二次点击翻转），同名 → 取件码升序
+    /// 按快递驿站  件数降序 → 同件数按驿站名 A→Z / Z→A → 未标注驿站置底 → 组内取件码升序
+    /// ```
+    ///
+    /// 🔴 时间一律用 `receivedAt`：同一条记录再收到短信 / 手工补录都会刷新它，
+    ///    所以它就是"这条取件码最近一次进入 App 的时刻"。
+    /// 🔴 组内**永远是取件码升序**：原来那个「驿站内排序」四档设置已按老大要求删掉，
+    ///    全 App 只有这一套，心智最简。
     static func sort(_ records: [PickupRecord], mode: Mode) -> [PickupRecord] {
         switch mode {
         case .newest:
             return records.sorted {
-                $0.receivedAt == $1.receivedAt ? tieBreak($0, $1) : $0.receivedAt > $1.receivedAt
+                $0.receivedAt == $1.receivedAt
+                    ? tieBreak($0, $1)
+                    : $0.receivedAt > $1.receivedAt
             }
         case .oldest:
             return records.sorted {
-                $0.receivedAt == $1.receivedAt ? tieBreak($0, $1) : $0.receivedAt < $1.receivedAt
+                $0.receivedAt == $1.receivedAt
+                    ? tieBreak($0, $1)
+                    : $0.receivedAt < $1.receivedAt
             }
         case .company:
+            let asc = PickupStorage.companyAscending
             return records.sorted {
                 let a = companyName(of: $0), b = companyName(of: $1)
-                if a != b { return a < b }
-                if $0.receivedAt != $1.receivedAt { return $0.receivedAt > $1.receivedAt }
+                if a != b { return asc ? a < b : a > b }
                 return tieBreak($0, $1)
             }
         case .station:
-            // 🔴 2026-11-21 统一口径（主人定）：**组间按件数多在前**，同数按名字，
-            //    「未标注驿站」永远置底；组**内**的先后由「驿站内排序」决定。
-            //    以前待取/已取按件数、桌面小组件按名字升序 —— 同一份数据两种顺序，
-            //    手机上排好的顺序到桌面就乱了。
-            let inner = StationInnerOrder.current
+            let asc = PickupStorage.stationNameAscending
             var keys: [UUID: String] = [:]
             var counts: [String: Int] = [:]
             for record in records {
@@ -1036,17 +1105,13 @@ enum PickupSortLogic {
             return records.sorted {
                 let a = keys[$0.id] ?? noStation, b = keys[$1.id] ?? noStation
                 let aIsNone = (a == noStation), bIsNone = (b == noStation)
-                if aIsNone != bIsNone { return bIsNone }   // 未标注驿站永远置底
+                if aIsNone != bIsNone { return bIsNone }        // 未标注永远置底
                 if a != b {
                     let ca = counts[a] ?? 0, cb = counts[b] ?? 0
-                    if ca != cb { return ca > cb }          // 件数多的组在前
-                    return a < b
+                    if ca != cb { return ca > cb }              // 件多的驿站在前
+                    return asc ? a < b : a > b                  // 同件数按名字（可翻转）
                 }
-                // 组内先后与待取页同一个时刻：`lastNotifiedAt`（它本身就是
-                // `history?.last ?? receivedAt`，没通知过自然回落收到时间）。
-                // 2026-11-21 主人：「小组件的排序就和待取页面的分组排序保持一致就行」。
-                let moment: (PickupRecord) -> Date = { $0.lastNotifiedAt }
-                return inner.isOrderedBefore($0, $1, moment: moment)
+                return tieBreak($0, $1)                         // 组内按码升序
             }
         }
     }

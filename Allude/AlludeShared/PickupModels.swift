@@ -750,6 +750,20 @@ enum PickupMerge {
             // 统计页「今日已取」还会 +1、平均停留被拉低。
             guard seenInBatch.insert(candidate.fingerprint).inserted else { continue }
 
+            // 🔴 2026-11-23 老大定：**已取过的件再次收到短信 / 再被录入 → 自动恢复待取，
+            //    并刷新时间戳**（"又到了一个"）。以前这里只匹配待取记录，
+            //    已取的那条匹配不上，于是新建一条 —— 同一件在已取和待取里各留一份。
+            if let index = working.firstIndex(where: {
+                $0.isPickedUp && $0.fingerprint == candidate.fingerprint
+            }) {
+                working[index].pickedUpAt = nil              // 回到待取
+                working[index].receivedAt = candidate.receivedAt   // 新时间戳（排序用它）
+                working[index].history = (working[index].history ?? [])
+                    + [candidate.receivedAt]
+                updated.append(working[index])
+                continue
+            }
+
             if let index = working.firstIndex(where: {
                 !$0.isPickedUp && $0.fingerprint == candidate.fingerprint
             }) {

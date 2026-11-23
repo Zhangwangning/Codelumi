@@ -225,13 +225,15 @@ struct SettingsCard<Content: View>: View {
 struct SettingsGroup<Content: View>: View {
     let title: String
     var note: String? = nil
+    /// 分组标题挂「实验室」徽章（统一标记，见 `LabBadge`）
+    var isLab: Bool = false
     @ViewBuilder let content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // 标题为空时**整行不渲染**（Text("") 仍会占一行高度，上方会多出空白）。
             if !title.isEmpty {
-                SectionHeader(title: title)
+                SectionHeader(title: title, isLab: isLab)
             }
             SettingsCard(note: note) { content }
         }
@@ -241,6 +243,9 @@ struct SettingsGroup<Content: View>: View {
 /// 二级页里的一行：标题在左，控件/值在右。**不带图标**（见上方说明）。
 struct SettingsPlainRow<Trailing: View>: View {
     let title: String
+    /// 标题后挂「实验室」徽章（2026-11-22：徽章要跟着**功能本体**这一行走，
+    /// 不能孤零零躺在页面底部的说明旁边 —— 那样看不出它在标哪一项）
+    var isLab: Bool = false
     @ViewBuilder let trailing: Trailing
 
     var body: some View {
@@ -249,6 +254,10 @@ struct SettingsPlainRow<Trailing: View>: View {
             Text(title.L)
                 .font(AppTheme.TypeScale.rowTitle)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if isLab {
+                LabBadge()
+            }
 
             Spacer(minLength: 8)
 
